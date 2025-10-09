@@ -1,0 +1,257 @@
+---
+title: "Smoking prevalence projection for Birmingham"
+author: "Chung Au-Yeung"
+editor: visual
+execute:
+  echo: false
+  message: false
+  warning: false
+  fig-width: 10
+  fig-height: 8
+format: 
+  html:
+    embed-resources: true
+    toc: true
+    toc-location: left
+    number-sections: true
+---
+
+## Introduction
+
+Birmingham Public Health has expanded community stop smoking services through the Smokefree Generation grant, marking a major step forward in the national journey towards becoming smokefree by 2030. The initiative expands capacity for cessation services in communities where smoking prevalence remains high and introduces targeted interventions for groups disproportionately affected by tobacco use—particularly those experiencing mental illness, substance use, or homelessness.
+
+While these initiatives strengthen local cessation capacity, reducing smoking prevalence across all communities requires sustained monitoring. This report aims at developing a model to project the smoking prevalence in Birmingham till 2047, allowing the local team to track progress toward the 2030 target. The model will also allow scenario testing to assess the potential impact of future policies or interventions.
+
+## Method
+
+### Data
+
+This projection draws upon publicly available data from multiple reputable sources. Population and migration estimates for Birmingham up to 2047 were obtained from the Office for National Statistics (ONS) 2022-based subnational population projections. Smoking prevalence data were collated from several national datasets, including Adult Smoking Habits in England (ONS), Smoking, Drinking and Drug Use among Young People in England 2023 (NHS Digital), and the Profile of 16–17-year-old Smokers from Action on Smoking and Health (ASH).
+
+The transition probabilities among states in the Markov model were specific to age and gender. These probabilities were obtained an estimation produced from cross-sectional survey by the University of Sheffield. The original probabilities were reported by Index of Multiple Deprivation (IMD) quintile. In order to generate an overall estimate representative of Birmingham, a weighted average was calculated using the population distribution of smokers across IMD deciles within the city. Since smoking overall has being following a downward trend in recent years and this pattern is expected to persist, it is possible that the smoking prevalence could plateau or even increase, similar to trend being observed in Australia and US. Therefore, this analysis follows the Department of Health & Social Care (DHSC)'s method to fix the transition probabilities at 2022 estimate through out the simulation. With regards to DHSC's method again, a long-term quit probability was applied to ex-smokers who had remained abstinent for 10 years, allowing them to transition to the non-smoker state. This implies that a proportion of ex-smokers will share the same health risk as the non-smokers.
+
+The all-cause mortality rates were derived from the national life tables 2021-2023 and subsequently averaged across the three smoking status groups: non-smokers, current smokers, and ex-smokers. uses the equation from a prior study to calculate the death risk for non-smoker, as shown below:
+
+$$
+P_{d0} = \frac{P_{d\text{all}}}{P_{r\text{non}} + P_{r\text{cur}} \times R_{\text{cur}} + P_{r\text{ex}} \times R_{\text{ex}}}
+$$
+
+$P_{d\text{all}}$ is the all cause mortality rate while $P_{d\text{rnon}}$, $P_{d\text{rcur}}$ and $P_{d\text{rex}}$ are prevalence of non-smoker, current smoker and ex-smoker respectively. The mortality rate for current smoker are elevated by the relative risk $R_{d\text{cur}}$ and therefore, the rate is $P_{d0} \times R_{\text{cur}}$. Correspondingly, the mortality rate for ex-smoker will be $P_{d0} \times R_{\text{ex}}$. The relative risks of death for current and ex-smokers were obtained from published literature. As relative risk vary according to duration since quitting (e.g., short-term vs. long-term cessation) and age at quitting, there will have different combinations of relative risks. However, the model used in this analysis does not account for age at cessation or distinguish between short- and long-term quitters. Therefore, the relative risk for ex-smokers was based on estimates corresponding to long-term quitters. Furthermore, the model includes 10 sub-states for ex-smokers, corresponding to the number of years since quitting. These sub-states allow ex-smokers to experience a diminishing probability of relapse over time, reflecting evidence that the likelihood of returning to smoking decreases with the duration of abstinence.
+
+### Model structure
+
+This analysis employed an open-cohort Markov model to simulate the natural history of smoking behaviour for those who are above 13 years old in Birmingham. The model includes annual cycles and a finite time horizon of 25 years. THe model started at time 0 using the number of population in 2022. Smoking status was classified into non-smokers, current smokers and ex-smokers. At the start of each annual cycle, the distribution of smoking status among these entrants is determined in proportion to observed smoking prevalence data for this age group. Simultaneously, the model incorporates net migration by smoking status. For simplicity, it is assumed that the smoking distribution of migrants mirrors that of the UK population.
+
+![**Figure 1.** Markov state transition diagram for smoking prevalence](images/statetransition.png){fig-align="center" fig-cap-align="center"}
+
+```{r setup}
+library(tidyverse)
+library(readr)
+library(readxl)
+library(writexl)
+library(ggiraph)
+library(RColorBrewer)
+```
+
+## Results
+
+### Baseline result
+
+Applying the baseline transition probabilities to the initial population produces the baseline scenario, representing outcomes in the absence of any policy intervention. The result is comparable to the DHSC's published model, showing a similar trend and similar prevalence. The first cycle of the model in 2023 shows the the smoking prevalence for those who are 13 or above is 12.48%. Without any additional policies being implemented, the smoking prevalence in Birmingham is estimated to reach 6.89% in 2047.
+
+```{r}
+#| echo: false
+all_scenario <- read_excel("C:/Users/TMPACGAG/OneDrive - Birmingham City Council/Documents/R projects/addiction team/smoking prevalence projection/result/all_scenario.xlsx")
+
+plot1 = all_scenario%>%
+  mutate(State_new = State,
+         State_new = ifelse(grepl("Ex", State),"Ex-smoker", State_new)) %>% 
+  filter(State_new!= "Deaths") %>% 
+  group_by(Year, State_new,Scenario) %>%
+  summarise(Total = sum(Count, na.rm=TRUE), .groups="drop") %>% 
+  mutate(newgroup = ifelse(State_new == "Current smoker",
+                           "Current smoker",
+                           "Former and non")) %>% 
+  group_by(Year,newgroup ,Scenario) %>% 
+  summarise(numerator = sum(Total)) %>% 
+  ungroup() %>% 
+  group_by(Year,Scenario) %>% 
+  mutate(denominator =sum(numerator)) %>% 
+  ungroup() %>% 
+  filter(newgroup == "Current smoker") %>% 
+  mutate(smoking_prev = numerator/denominator,Year = as.numeric(as.character(Year))) %>% 
+  filter(Scenario == 0, Year>=2023) %>% 
+  mutate(tooltip = paste0("Year: ", Year,"\n",
+                          "Smoking Prevalence: ", round(smoking_prev*100,2), "%", "\n")) %>% 
+  ggplot(aes(x = Year, y = smoking_prev, group = factor(Scenario), colour = factor(Scenario))) +
+  geom_line_interactive(size=1, aes(data_id = Year), colour = "#3c3c3b")+
+  geom_point_interactive(aes(tooltip = tooltip, data_id = Year),colour="#3c3c3b")+
+   theme_minimal(base_size = 14)+
+  scale_y_continuous(limits = c(0,0.15), labels = scales::percent)+
+  scale_x_continuous(breaks = c(2023:2047))+
+  labs(title = "Modelled baseline smoking prevalence in Birmingham >= 13 year olds",
+       y="Prevalence") +
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(angle=45),
+        legend.position = "bottom")
+
+  
+#custom css
+tooltip_css = "
+  border-radius: 12px;
+  color: #333;
+  background-color: white;
+  padding: 10px;
+  font-size: 14px;
+  transition: all 0.5s ease-out;
+"
+girafe( ggobj = plot1, 
+        options = list( opts_hover(css=" "), 
+                        opts_hover_inv(css = girafe_css( css = "opacity:0.4;",
+                                                         line = "opacity:0.075;", 
+                                                         point = "opacity:0.075;" )), 
+                        opts_tooltip(css = tooltip_css) ))
+  
+```
+
+### Scenario
+
+This analysis followed the scenario where the Tobacoo and Vape bill that has passed the second reading in House of Lords will be successfully implemented in the proposed date on the 1st of January 2027. The bill aims to prohibit the sale of tobacco to people born on or after 1 January 2009 and provision about the licensing of retail sales and the registration of retailers, alongside enforcement measures and financial penalties for non-compliance. While some public debate has characterised the policy as a form of “nanny state” intervention, the Bill represents one of the most ambitious tobacco control measures in recent UK history, aiming to protect future generations from nicotine addiction and related harms.
+
+Therefore, this analysis introduces the Tobacco and Vapes Bill within the 2027 model cycle, assuming that individuals turning 18 in 2027 will be the first cohort affected by the policy. The model applies a year-on-year reduction in initiation rates, meaning the effect compounds over time as younger cohorts progressively enter the population under the new legislation. However, as there is currently no empirical evidence quantifying the potential impact of the Bill, the effect must be modelled through assumptions. Accordingly, Scenarios 1–4 represent varying levels of reduction in smoking initiation rates, modelled as 10%, 30%, 60%, and 90% decreases, respectively, relative to the baseline scenario of no policy intervention.
+
+The results show that smoking prevalence is projected to decline to 4.25% by 2047 under Scenario 1 (10% reduction in initiation rate), while Scenario 2 (30% reduction) reaches 3.22% in the same year. Scenarios 3 and 4, representing larger reductions of 60% and 90%, produced almost identical trends, with prevalence stabilising at approximately 3% by 2047.
+
+```{r}
+#| echo: false
+all_scenario <- read_excel("C:/Users/TMPACGAG/OneDrive - Birmingham City Council/Documents/R projects/addiction team/smoking prevalence projection/result/all_scenario.xlsx")
+
+plot2 = all_scenario%>%
+  mutate(State_new = State,
+         State_new = ifelse(grepl("Ex", State),"Ex-smoker", State_new)) %>% 
+  filter(State_new!= "Deaths") %>% 
+  group_by(Year, State_new,Scenario) %>%
+  summarise(Total = sum(Count, na.rm=TRUE), .groups="drop") %>% 
+  mutate(newgroup = ifelse(State_new == "Current smoker",
+                           "Current smoker",
+                           "Former and non")) %>% 
+  group_by(Year,newgroup ,Scenario) %>% 
+  summarise(numerator = sum(Total)) %>% 
+  ungroup() %>% 
+  group_by(Year,Scenario) %>% 
+  mutate(denominator =sum(numerator)) %>% 
+  ungroup() %>% 
+  filter(newgroup == "Current smoker") %>% 
+  mutate(smoking_prev = numerator/denominator,Year = as.numeric(as.character(Year))) %>% 
+  filter(Year >=2026) %>% 
+  mutate(tooltip = paste0("Year: ", Year,"\n",
+                          "Scenario: ", factor(Scenario),"\n",
+                          "Smoking Prevalence: ", round(smoking_prev*100,2), "%", "\n")) %>% 
+  ggplot(aes(x = Year, y = smoking_prev, group = factor(Scenario), colour = factor(Scenario))) +
+  geom_line_interactive(size=1, aes(data_id = paste(Scenario)))+
+  geom_line_interactive(
+    data = all_scenario %>%
+      mutate(State_new = State,
+             State_new = ifelse(grepl("Ex", State),"Ex-smoker", State_new)) %>% 
+      filter(State_new != "Deaths") %>% 
+      group_by(Year, State_new, Scenario) %>%
+      summarise(Total = sum(Count, na.rm = TRUE), .groups="drop") %>% 
+      mutate(newgroup = ifelse(State_new == "Current smoker", "Current smoker", "Former and non")) %>% 
+      group_by(Year, newgroup, Scenario) %>% 
+      summarise(numerator = sum(Total)) %>% 
+      ungroup() %>% 
+      group_by(Year, Scenario) %>% 
+      mutate(denominator = sum(numerator)) %>% 
+      ungroup() %>% 
+      filter(newgroup == "Current smoker") %>% 
+      mutate(smoking_prev = numerator / denominator,
+             Year = as.numeric(as.character(Year))) %>% 
+      filter(Year >= 2023 & Year <= 2026, Scenario == 0) %>% 
+      mutate(tooltip = paste0("Year: ", Year, "\n",
+                              "Scenario: ", factor(Scenario), "\n",
+                              "Smoking Prevalence: ", round(smoking_prev*100,2), "%", "\n")),
+    size = 1, colour = "#3c3c3b", linetype = 2,aes(data_id = paste(Scenario))
+  )+
+  geom_point_interactive(data = all_scenario%>%
+                           mutate(State_new = State,
+                                  State_new = ifelse(grepl("Ex", State),"Ex-smoker", State_new)) %>% 
+                           filter(State_new!= "Deaths") %>% 
+                           group_by(Year, State_new,Scenario) %>%
+                           summarise(Total = sum(Count, na.rm=TRUE), .groups="drop") %>% 
+                           mutate(newgroup = ifelse(State_new == "Current smoker",
+                                                    "Current smoker",
+                                                    "Former and non")) %>% 
+                           group_by(Year,newgroup ,Scenario) %>% 
+                           summarise(numerator = sum(Total)) %>% 
+                           ungroup() %>% 
+                           group_by(Year,Scenario) %>% 
+                           mutate(denominator =sum(numerator)) %>% 
+                           ungroup() %>% 
+                           filter(newgroup == "Current smoker") %>% 
+                           mutate(smoking_prev = numerator/denominator,Year = as.numeric(as.character(Year))) %>% 
+                           filter(Year >=2026) %>% 
+                           mutate(tooltip = paste0("Year: ", Year,"\n",
+                                                   "Scenario: ", factor(Scenario),"\n",
+                                                   "Smoking Prevalence: ", round(smoking_prev*100,2), "%", "\n")),aes(tooltip = tooltip, data_id = paste(Scenario)))+
+  geom_point_interactive(data = all_scenario%>%
+                           mutate(State_new = State,
+                                  State_new = ifelse(grepl("Ex", State),"Ex-smoker", State_new)) %>% 
+                           filter(State_new!= "Deaths") %>% 
+                           group_by(Year, State_new,Scenario) %>%
+                           summarise(Total = sum(Count, na.rm=TRUE), .groups="drop") %>% 
+                           mutate(newgroup = ifelse(State_new == "Current smoker",
+                                                    "Current smoker",
+                                                    "Former and non")) %>% 
+                           group_by(Year,newgroup ,Scenario) %>% 
+                           summarise(numerator = sum(Total)) %>% 
+                           ungroup() %>% 
+                           group_by(Year,Scenario) %>% 
+                           mutate(denominator =sum(numerator)) %>% 
+                           ungroup() %>% 
+                           filter(newgroup == "Current smoker") %>% 
+                           mutate(smoking_prev = numerator/denominator,Year = as.numeric(as.character(Year))) %>% 
+                           filter(Year >= 2023 & Year <= 2026, Scenario == 0) %>% 
+                           mutate(tooltip = paste0("Year: ", Year,"\n",
+                                                   "Scenario: ", factor(Scenario),"\n",
+                                                   "Smoking Prevalence: ", round(smoking_prev*100,2), "%", "\n")),aes(tooltip = tooltip, data_id = paste(Scenario)), colour = "#3c3c3b")+
+  theme_minimal(base_size = 14)+
+  scale_y_continuous(limits = c(0,0.15), labels = scales::percent)+
+  scale_x_continuous(breaks = c(2023:2047))+
+  labs(title = "Modelled smoking prevalence in Birmingham >= 13 year olds for each scenario \n assuming the Tobacco and Vape Bill comes in effect in 2027",
+       y="Prevalence",
+       colour = "Scenario") +
+  scale_color_manual(values = c(
+    "0" = "#3c3c3b",
+    "1" = "#D00070",
+    "2" = "#FFAD00",
+    "3" = "#75BC22",
+    "4" = "#84329B"
+  ),
+  labels = c("baseline",
+             "-10% in instigation",
+             "-30% in institgation",
+             "-60% in instigation",
+             "-90% in instigation"))+
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(angle=45),
+        legend.position = "bottom")
+
+
+#custom css
+tooltip_css = "
+  border-radius: 12px;
+  color: #333;
+  background-color: white;
+  padding: 10px;
+  font-size: 14px;
+  transition: all 0.5s ease-out;
+"
+girafe( ggobj = plot2, 
+        options = list( opts_hover(css=" "), 
+                        opts_hover_inv(css = girafe_css( css = "opacity:0.4;",
+                                                         line = "opacity:0.075;", 
+                                                         point = "opacity:0.075;" )), 
+                        opts_tooltip(css = tooltip_css) ))
+
+
+```
