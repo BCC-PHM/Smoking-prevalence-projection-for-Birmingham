@@ -255,3 +255,9 @@ girafe( ggobj = plot2,
 
 
 ```
+
+## Limitation
+
+In developing the model, several assumptions and simplifications were necessary, and as such, the findings should be interpreted in light of these limitations.
+
+**Firstly**, The model does not explicitly incorporate vaping behaviour, if vaping became a subsitute for smoking in the younger cohorts, the model may overstate the decline in nicotine consumption, since no information of vaping is incoporated to the model, individuals who vape are classified as non-smokers within the current framework. **Secondly**, the model does not incorporate information on how long former smokers have been abstinent. All individuals entering the exsmoker state are assumed to have quit for one year at the start of each cycle, which may overestimate their likelihood of relapse compared to those who have remained smoke-free for longer periods. The model applies England’s average smoking prevalence to all net migrants, even though individuals arriving from other countries may have distinct smoking behaviours and cessation histories. Given this limitation, net migration may be negative for ex-smoker states, particularly among older age groups, reflecting Birmingham’s overall pattern of net out-migration at older ages. However, because negative values cannot be represented within Markov state transitions, the model constrains these values to zero. This adjustment ensures model stability but may slightly underestimate the outflow of older former smokers in the projected population structure. Fortunately, the extent of net out-migration of ex-smoker states among older age groups was relatively modest, and therefore is unlikely to have a substantial impact on the overall model outcomes. **Thirdly**, parameter uncertanity for transition probabilities can not be assessed, as the data sources used did not provide associated confidence intervals or measures of variability.
