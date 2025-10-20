@@ -73,6 +73,8 @@ smoking_prev_by_imd_birm = smoking_prev_by_imd_uk %>%
 
 
 ############################################################################################################################################################
+
+
 #transP from non smoker/never to current smoker 
 TransP_N_2_C <- read_excel("smoking_state_transition_probabilities_England.xlsx", 
                                                              sheet = "Initiation", skip = 1)
@@ -101,6 +103,58 @@ ages_fill <- expand_grid(
 TransP_N_2_C = bind_rows(TransP_N_2_C,ages_fill ) %>% 
   rename(Age =age,
          Sex =sex)
+
+# Using University of Sheffield’s data instigation, quit and relapse rates were available from the age of 16 (at the time of constructing this model). 
+# For our analysis we also calculated instigation rates for 13 to 15 year olds. We did this by taking instigation rates for 14 to 16 year olds from the US SimSmoke model 
+# (available to download from the US National Cancer Institute Publication Support and Modeling Resources website), and using these to adjust the Sheffield rates, 
+# by assuming the ratio between age groups in the US model applies to our population. For example, SimSmoke suggests 2.4% of 15 year old male non-smokers instigate and 3.1% of 16 year old males 
+# igate. We then divided the Sheffield 16 year old male instigation rate by 2.4 divided by 3.1 to calculate a 15 year old male instigation rate. For 13 year olds, 
+# we assumed rates were equal to 14 year olds, as outlined below. We applied long-term quit probabilities (described below) from the age of 24, as they are only relevant 
+# for individuals who quit smoking more than 10 years ago.
+
+
+#https://resources.cisnet.cancer.gov/projects/#shg/iomr/resources
+
+# it basically means we need to multiply a fraction to scale down the sheffield's rates by a fraction 
+#get male ratio
+simsmoke_male <- read_excel("Initiation and Cessation Rates SimSmoke model (IOM)_03122015.xlsx", 
+                                                                         sheet = "Male Initiation", skip = 2)
+simsmoke_male  = simsmoke_male %>% 
+  filter(Age %in% c(11:16)) %>% 
+  select(Age, `2022`) %>% 
+  mutate(denominator = lead(`2022`, default = 1),
+         scaling = `2022`/denominator,
+         Sex = "Men") %>% 
+  select(Age,scaling,Sex) %>% 
+  filter(Age != 16)
+
+#get female ratio 
+simsmoke_female <- read_excel("Initiation and Cessation Rates SimSmoke model (IOM)_03122015.xlsx", 
+                                                                         sheet = "Female Initiation", skip=2)
+
+
+simsmoke_female = simsmoke_female %>% 
+  filter(Age %in% c(11:16)) %>% 
+  select(Age, `2022`) %>% 
+  mutate(denominator = lead(`2022`, default = 1),
+         scaling = `2022`/denominator,
+         Sex = "Women") %>% 
+  select(Age,scaling,Sex) %>% 
+  filter(Age !=16)
+
+
+
+#now join the scaling table back to TransP_N_2_C
+
+
+TransP_N_2_C =TransP_N_2_C %>% 
+  left_join(simsmoke_male, by = c("Age","Sex")) %>% 
+  left_join(simsmoke_female, by = c("Age", "Sex")) %>% 
+  mutate(scaling.x = ifelse(is.na(scaling.x), 1,scaling.x),
+         scaling.y= ifelse(is.na(scaling.y), 1,scaling.y),
+         tp_N_2_C = tp_N_2_C*scaling.x*scaling.y) %>% 
+  select(-scaling.x,-scaling.y)
+
 
 
 
@@ -171,6 +225,8 @@ ages_fill_relapse<- expand_grid(
 TransP_EX_2_C = bind_rows(TransP_EX_2_C, ages_fill_relapse) %>% 
   rename(Age =age,
          Sex =sex)
+
+
 
 ###############################################################
 

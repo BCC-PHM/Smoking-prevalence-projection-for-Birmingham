@@ -112,8 +112,8 @@ library(tidyr)
 
 
 
-simulate_model <- function(scenario = 0, selected_gender = "Women", verbose =TRUE) {
-  
+simulate_model <- function(scenario = 0, selected_gender = "Women", verbose =TRUE,zero_migration = FALSE) {
+  zero_migration <- TRUE  # set once above the loop
   
   if (verbose) {
     message("▶ Starting simulation | Scenario: ", scenario, " | Sex: ", selected_gender)
@@ -170,11 +170,14 @@ simulate_model <- function(scenario = 0, selected_gender = "Women", verbose =TRU
         r8 <- Relapse %>% filter(Age==next_age, Sex==selected_gender, time_since_quit==8) %>% pull(tp_EX_2_C)
         r9 <- Relapse %>% filter(Age==next_age, Sex==selected_gender, time_since_quit==9) %>% pull(tp_EX_2_C)
         
+        if (zero_migration) {
+          mig_N <- 0; mig_C <- 0; mig_Ex1 <- 0
+        } else {
         # --- migration ---
         mig_N   = migration %>% filter(year==next_year, Age==next_age, Sex==selected_gender, Initial=="Non smoker") %>% pull(net_migration_adjusted) %>% {if(length(.)==0) 0 else .}
         mig_C   = migration %>% filter(year==next_year, Age==next_age, Sex==selected_gender, Initial=="Current smoker") %>% pull(net_migration_adjusted) %>% {if(length(.)==0) 0 else .}
         mig_Ex1 = migration %>% filter(year==next_year, Age==next_age, Sex==selected_gender, Initial=="Ex-smoker") %>% pull(net_migration_adjusted) %>% {if(length(.)==0) 0 else .}
-        
+        }
         # --- Never smokers ---
         N[as.character(next_age), as.character(next_year)] = 
           N[as.character(a), as.character(this_year)] * (1 - p_init - qN) +
@@ -299,206 +302,206 @@ all_scenario <- read_excel("result/all_scenario.xlsx")
 
 
 ######################################################################
-
-plot1 = all_scenario%>%
-  mutate(State_new = State,
-         State_new = ifelse(grepl("Ex", State),"Ex-smoker", State_new)) %>% 
-  filter(State_new!= "Deaths") %>% 
-  group_by(Year, State_new,Scenario) %>%
-  summarise(Total = sum(Count, na.rm=TRUE), .groups="drop") %>% 
-  mutate(newgroup = ifelse(State_new == "Current smoker",
-                           "Current smoker",
-                           "Former and non")) %>% 
-  group_by(Year,newgroup ,Scenario) %>% 
-  summarise(numerator = sum(Total)) %>% 
-  ungroup() %>% 
-  group_by(Year,Scenario) %>% 
-  mutate(denominator =sum(numerator)) %>% 
-  ungroup() %>% 
-  filter(newgroup == "Current smoker") %>% 
-  mutate(smoking_prev = numerator/denominator,Year = as.numeric(as.character(Year))) %>% 
-  filter(Scenario == 0, Year>=2023) %>% 
-  mutate(tooltip = paste0("Year: ", Year,"\n",
-                          "Smoking Prevalence: ", round(smoking_prev*100,2), "%", "\n")) %>% 
-  ggplot(aes(x = Year, y = smoking_prev, group = factor(Scenario), colour = factor(Scenario))) +
-  geom_line_interactive(size=1, aes(data_id = Year), colour = "#3c3c3b")+
-  geom_point_interactive(aes(tooltip = tooltip, data_id = Year),colour="#3c3c3b")+
-  theme_minimal(base_size = 14)+
-  scale_y_continuous(limits = c(0,0.15), labels = scales::percent)+
-  scale_x_continuous(breaks = c(2023:2047))+
-  labs(title = "Modelled baseline smoking prevalence in Birmingham >= 13 year olds",
-       y="Prevalence") +
-  theme(plot.title = element_text(hjust = 0.5),
-        axis.text.x = element_text(angle=45),
-        legend.position = "bottom")
-
-
-#custom css
-tooltip_css = "
-  border-radius: 12px;
-  color: #333;
-  background-color: white;
-  padding: 10px;
-  font-size: 14px;
-  transition: all 0.5s ease-out;
-"
-girafe( ggobj = plot1, 
-        options = list( opts_hover(css=" "), 
-                        opts_hover_inv(css = girafe_css( css = "opacity:0.4;",
-                                                         line = "opacity:0.075;", 
-                                                         point = "opacity:0.075;" )), 
-                        opts_tooltip(css = tooltip_css) ))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-########################################################################
-
-plot2 = all_scenario%>%
-  mutate(State_new = State,
-         State_new = ifelse(grepl("Ex", State),"Ex-smoker", State_new)) %>% 
-  filter(State_new!= "Deaths") %>% 
-  group_by(Year, State_new,Scenario) %>%
-  summarise(Total = sum(Count, na.rm=TRUE), .groups="drop") %>% 
-  mutate(newgroup = ifelse(State_new == "Current smoker",
-                           "Current smoker",
-                           "Former and non")) %>% 
-  group_by(Year,newgroup ,Scenario) %>% 
-  summarise(numerator = sum(Total)) %>% 
-  ungroup() %>% 
-  group_by(Year,Scenario) %>% 
-  mutate(denominator =sum(numerator)) %>% 
-  ungroup() %>% 
-  filter(newgroup == "Current smoker") %>% 
-  mutate(smoking_prev = numerator/denominator,Year = as.numeric(as.character(Year))) %>% 
-  filter(Year >=2026) %>% 
-  mutate(tooltip = paste0("Year: ", Year,"\n",
-                          "Scenario: ", factor(Scenario),"\n",
-                          "Smoking Prevalence: ", round(smoking_prev*100,2), "%", "\n")) %>% 
-  ggplot(aes(x = Year, y = smoking_prev, group = factor(Scenario), colour = factor(Scenario))) +
-  geom_line_interactive(size=1, aes(data_id = paste(Scenario)))+
-  geom_line_interactive(
-    data = all_scenario %>%
-      mutate(State_new = State,
-             State_new = ifelse(grepl("Ex", State),"Ex-smoker", State_new)) %>% 
-      filter(State_new != "Deaths") %>% 
-      group_by(Year, State_new, Scenario) %>%
-      summarise(Total = sum(Count, na.rm = TRUE), .groups="drop") %>% 
-      mutate(newgroup = ifelse(State_new == "Current smoker", "Current smoker", "Former and non")) %>% 
-      group_by(Year, newgroup, Scenario) %>% 
-      summarise(numerator = sum(Total)) %>% 
-      ungroup() %>% 
-      group_by(Year, Scenario) %>% 
-      mutate(denominator = sum(numerator)) %>% 
-      ungroup() %>% 
-      filter(newgroup == "Current smoker") %>% 
-      mutate(smoking_prev = numerator / denominator,
-             Year = as.numeric(as.character(Year))) %>% 
-      filter(Year >= 2023 & Year <= 2026, Scenario == 0) %>% 
-      mutate(tooltip = paste0("Year: ", Year, "\n",
-                              "Scenario: ", factor(Scenario), "\n",
-                              "Smoking Prevalence: ", round(smoking_prev*100,2), "%", "\n")),
-    size = 1, colour = "#3c3c3b", linetype = 2,aes(data_id = paste(Scenario))
-  )+
-  geom_point_interactive(data = all_scenario%>%
-                           mutate(State_new = State,
-                                  State_new = ifelse(grepl("Ex", State),"Ex-smoker", State_new)) %>% 
-                           filter(State_new!= "Deaths") %>% 
-                           group_by(Year, State_new,Scenario) %>%
-                           summarise(Total = sum(Count, na.rm=TRUE), .groups="drop") %>% 
-                           mutate(newgroup = ifelse(State_new == "Current smoker",
-                                                    "Current smoker",
-                                                    "Former and non")) %>% 
-                           group_by(Year,newgroup ,Scenario) %>% 
-                           summarise(numerator = sum(Total)) %>% 
-                           ungroup() %>% 
-                           group_by(Year,Scenario) %>% 
-                           mutate(denominator =sum(numerator)) %>% 
-                           ungroup() %>% 
-                           filter(newgroup == "Current smoker") %>% 
-                           mutate(smoking_prev = numerator/denominator,Year = as.numeric(as.character(Year))) %>% 
-                           filter(Year >=2026) %>% 
-                           mutate(tooltip = paste0("Year: ", Year,"\n",
-                                                   "Scenario: ", factor(Scenario),"\n",
-                                                   "Smoking Prevalence: ", round(smoking_prev*100,2), "%", "\n")),aes(tooltip = tooltip, data_id = paste(Scenario)))+
-  geom_point_interactive(data = all_scenario%>%
-                           mutate(State_new = State,
-                                  State_new = ifelse(grepl("Ex", State),"Ex-smoker", State_new)) %>% 
-                           filter(State_new!= "Deaths") %>% 
-                           group_by(Year, State_new,Scenario) %>%
-                           summarise(Total = sum(Count, na.rm=TRUE), .groups="drop") %>% 
-                           mutate(newgroup = ifelse(State_new == "Current smoker",
-                                                    "Current smoker",
-                                                    "Former and non")) %>% 
-                           group_by(Year,newgroup ,Scenario) %>% 
-                           summarise(numerator = sum(Total)) %>% 
-                           ungroup() %>% 
-                           group_by(Year,Scenario) %>% 
-                           mutate(denominator =sum(numerator)) %>% 
-                           ungroup() %>% 
-                           filter(newgroup == "Current smoker") %>% 
-                           mutate(smoking_prev = numerator/denominator,Year = as.numeric(as.character(Year))) %>% 
-                           filter(Year >= 2023 & Year <= 2026, Scenario == 0) %>% 
-                           mutate(tooltip = paste0("Year: ", Year,"\n",
-                                                   "Scenario: ", factor(Scenario),"\n",
-                                                   "Smoking Prevalence: ", round(smoking_prev*100,2), "%", "\n")),aes(tooltip = tooltip, data_id = paste(Scenario)), colour = "#3c3c3b")+
-  theme_minimal(base_size = 14)+
-  scale_y_continuous(limits = c(0,0.15), labels = scales::percent)+
-  scale_x_continuous(breaks = c(2023:2047))+
-  labs(title = "Modelled smoking prevalence in Birmingham >= 13 year olds for each scenario \n assuming the Tobacco and Vape Bill comes in effect in 2027",
-       y="Prevalence",
-       colour = "Scenario") +
-  scale_color_manual(values = c(
-    "0" = "#3c3c3b",
-    "1" = "#D00070",
-    "2" = "#FFAD00",
-    "3" = "#75BC22",
-    "4" = "#84329B"
-  ),
-  labels = c("baseline",
-             "-10% in instigation",
-             "-30% in institgation",
-             "-60% in instigation",
-             "-90% in instigation"))+
-  theme(plot.title = element_text(hjust = 0.5),
-        axis.text.x = element_text(angle=45),
-        legend.position = "bottom")
-
-
-#custom css
-tooltip_css = "
-  border-radius: 12px;
-  color: #333;
-  background-color: white;
-  padding: 10px;
-  font-size: 14px;
-  transition: all 0.5s ease-out;
-"
-girafe( ggobj = plot2, 
-        options = list( opts_hover(css=" "), 
-                        opts_hover_inv(css = girafe_css( css = "opacity:0.4;",
-                                                         line = "opacity:0.075;", 
-                                                         point = "opacity:0.075;" )), 
-                        opts_tooltip(css = tooltip_css) ))
-
+# 
+# plot1 = all_scenario%>%
+#   mutate(State_new = State,
+#          State_new = ifelse(grepl("Ex", State),"Ex-smoker", State_new)) %>% 
+#   filter(State_new!= "Deaths") %>% 
+#   group_by(Year, State_new,Scenario) %>%
+#   summarise(Total = sum(Count, na.rm=TRUE), .groups="drop") %>% 
+#   mutate(newgroup = ifelse(State_new == "Current smoker",
+#                            "Current smoker",
+#                            "Former and non")) %>% 
+#   group_by(Year,newgroup ,Scenario) %>% 
+#   summarise(numerator = sum(Total)) %>% 
+#   ungroup() %>% 
+#   group_by(Year,Scenario) %>% 
+#   mutate(denominator =sum(numerator)) %>% 
+#   ungroup() %>% 
+#   filter(newgroup == "Current smoker") %>% 
+#   mutate(smoking_prev = numerator/denominator,Year = as.numeric(as.character(Year))) %>% 
+#   filter(Scenario == 0, Year>=2023) %>% 
+#   mutate(tooltip = paste0("Year: ", Year,"\n",
+#                           "Smoking Prevalence: ", round(smoking_prev*100,2), "%", "\n")) %>% 
+#   ggplot(aes(x = Year, y = smoking_prev, group = factor(Scenario), colour = factor(Scenario))) +
+#   geom_line_interactive(size=1, aes(data_id = Year), colour = "#3c3c3b")+
+#   geom_point_interactive(aes(tooltip = tooltip, data_id = Year),colour="#3c3c3b")+
+#   theme_minimal(base_size = 14)+
+#   scale_y_continuous(limits = c(0,0.15), labels = scales::percent)+
+#   scale_x_continuous(breaks = c(2023:2047))+
+#   labs(title = "Modelled baseline smoking prevalence in Birmingham >= 13 year olds",
+#        y="Prevalence") +
+#   theme(plot.title = element_text(hjust = 0.5),
+#         axis.text.x = element_text(angle=45),
+#         legend.position = "bottom")
+# 
+# 
+# #custom css
+# tooltip_css = "
+#   border-radius: 12px;
+#   color: #333;
+#   background-color: white;
+#   padding: 10px;
+#   font-size: 14px;
+#   transition: all 0.5s ease-out;
+# "
+# girafe( ggobj = plot1, 
+#         options = list( opts_hover(css=" "), 
+#                         opts_hover_inv(css = girafe_css( css = "opacity:0.4;",
+#                                                          line = "opacity:0.075;", 
+#                                                          point = "opacity:0.075;" )), 
+#                         opts_tooltip(css = tooltip_css) ))
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# ########################################################################
+# 
+# plot2 = all_scenario%>%
+#   mutate(State_new = State,
+#          State_new = ifelse(grepl("Ex", State),"Ex-smoker", State_new)) %>% 
+#   filter(State_new!= "Deaths") %>% 
+#   group_by(Year, State_new,Scenario) %>%
+#   summarise(Total = sum(Count, na.rm=TRUE), .groups="drop") %>% 
+#   mutate(newgroup = ifelse(State_new == "Current smoker",
+#                            "Current smoker",
+#                            "Former and non")) %>% 
+#   group_by(Year,newgroup ,Scenario) %>% 
+#   summarise(numerator = sum(Total)) %>% 
+#   ungroup() %>% 
+#   group_by(Year,Scenario) %>% 
+#   mutate(denominator =sum(numerator)) %>% 
+#   ungroup() %>% 
+#   filter(newgroup == "Current smoker") %>% 
+#   mutate(smoking_prev = numerator/denominator,Year = as.numeric(as.character(Year))) %>% 
+#   filter(Year >=2026) %>% 
+#   mutate(tooltip = paste0("Year: ", Year,"\n",
+#                           "Scenario: ", factor(Scenario),"\n",
+#                           "Smoking Prevalence: ", round(smoking_prev*100,2), "%", "\n")) %>% 
+#   ggplot(aes(x = Year, y = smoking_prev, group = factor(Scenario), colour = factor(Scenario))) +
+#   geom_line_interactive(size=1, aes(data_id = paste(Scenario)))+
+#   geom_line_interactive(
+#     data = all_scenario %>%
+#       mutate(State_new = State,
+#              State_new = ifelse(grepl("Ex", State),"Ex-smoker", State_new)) %>% 
+#       filter(State_new != "Deaths") %>% 
+#       group_by(Year, State_new, Scenario) %>%
+#       summarise(Total = sum(Count, na.rm = TRUE), .groups="drop") %>% 
+#       mutate(newgroup = ifelse(State_new == "Current smoker", "Current smoker", "Former and non")) %>% 
+#       group_by(Year, newgroup, Scenario) %>% 
+#       summarise(numerator = sum(Total)) %>% 
+#       ungroup() %>% 
+#       group_by(Year, Scenario) %>% 
+#       mutate(denominator = sum(numerator)) %>% 
+#       ungroup() %>% 
+#       filter(newgroup == "Current smoker") %>% 
+#       mutate(smoking_prev = numerator / denominator,
+#              Year = as.numeric(as.character(Year))) %>% 
+#       filter(Year >= 2023 & Year <= 2026, Scenario == 0) %>% 
+#       mutate(tooltip = paste0("Year: ", Year, "\n",
+#                               "Scenario: ", factor(Scenario), "\n",
+#                               "Smoking Prevalence: ", round(smoking_prev*100,2), "%", "\n")),
+#     size = 1, colour = "#3c3c3b", linetype = 2,aes(data_id = paste(Scenario))
+#   )+
+#   geom_point_interactive(data = all_scenario%>%
+#                            mutate(State_new = State,
+#                                   State_new = ifelse(grepl("Ex", State),"Ex-smoker", State_new)) %>% 
+#                            filter(State_new!= "Deaths") %>% 
+#                            group_by(Year, State_new,Scenario) %>%
+#                            summarise(Total = sum(Count, na.rm=TRUE), .groups="drop") %>% 
+#                            mutate(newgroup = ifelse(State_new == "Current smoker",
+#                                                     "Current smoker",
+#                                                     "Former and non")) %>% 
+#                            group_by(Year,newgroup ,Scenario) %>% 
+#                            summarise(numerator = sum(Total)) %>% 
+#                            ungroup() %>% 
+#                            group_by(Year,Scenario) %>% 
+#                            mutate(denominator =sum(numerator)) %>% 
+#                            ungroup() %>% 
+#                            filter(newgroup == "Current smoker") %>% 
+#                            mutate(smoking_prev = numerator/denominator,Year = as.numeric(as.character(Year))) %>% 
+#                            filter(Year >=2026) %>% 
+#                            mutate(tooltip = paste0("Year: ", Year,"\n",
+#                                                    "Scenario: ", factor(Scenario),"\n",
+#                                                    "Smoking Prevalence: ", round(smoking_prev*100,2), "%", "\n")),aes(tooltip = tooltip, data_id = paste(Scenario)))+
+#   geom_point_interactive(data = all_scenario%>%
+#                            mutate(State_new = State,
+#                                   State_new = ifelse(grepl("Ex", State),"Ex-smoker", State_new)) %>% 
+#                            filter(State_new!= "Deaths") %>% 
+#                            group_by(Year, State_new,Scenario) %>%
+#                            summarise(Total = sum(Count, na.rm=TRUE), .groups="drop") %>% 
+#                            mutate(newgroup = ifelse(State_new == "Current smoker",
+#                                                     "Current smoker",
+#                                                     "Former and non")) %>% 
+#                            group_by(Year,newgroup ,Scenario) %>% 
+#                            summarise(numerator = sum(Total)) %>% 
+#                            ungroup() %>% 
+#                            group_by(Year,Scenario) %>% 
+#                            mutate(denominator =sum(numerator)) %>% 
+#                            ungroup() %>% 
+#                            filter(newgroup == "Current smoker") %>% 
+#                            mutate(smoking_prev = numerator/denominator,Year = as.numeric(as.character(Year))) %>% 
+#                            filter(Year >= 2023 & Year <= 2026, Scenario == 0) %>% 
+#                            mutate(tooltip = paste0("Year: ", Year,"\n",
+#                                                    "Scenario: ", factor(Scenario),"\n",
+#                                                    "Smoking Prevalence: ", round(smoking_prev*100,2), "%", "\n")),aes(tooltip = tooltip, data_id = paste(Scenario)), colour = "#3c3c3b")+
+#   theme_minimal(base_size = 14)+
+#   scale_y_continuous(limits = c(0,0.15), labels = scales::percent)+
+#   scale_x_continuous(breaks = c(2023:2047))+
+#   labs(title = "Modelled smoking prevalence in Birmingham >= 13 year olds for each scenario \n assuming the Tobacco and Vape Bill comes in effect in 2027",
+#        y="Prevalence",
+#        colour = "Scenario") +
+#   scale_color_manual(values = c(
+#     "0" = "#3c3c3b",
+#     "1" = "#D00070",
+#     "2" = "#FFAD00",
+#     "3" = "#75BC22",
+#     "4" = "#84329B"
+#   ),
+#   labels = c("baseline",
+#              "-10% in instigation",
+#              "-30% in institgation",
+#              "-60% in instigation",
+#              "-90% in instigation"))+
+#   theme(plot.title = element_text(hjust = 0.5),
+#         axis.text.x = element_text(angle=45),
+#         legend.position = "bottom")
+# 
+# 
+# #custom css
+# tooltip_css = "
+#   border-radius: 12px;
+#   color: #333;
+#   background-color: white;
+#   padding: 10px;
+#   font-size: 14px;
+#   transition: all 0.5s ease-out;
+# "
+# girafe( ggobj = plot2, 
+#         options = list( opts_hover(css=" "), 
+#                         opts_hover_inv(css = girafe_css( css = "opacity:0.4;",
+#                                                          line = "opacity:0.075;", 
+#                                                          point = "opacity:0.075;" )), 
+#                         opts_tooltip(css = tooltip_css) ))
+# 
 
 

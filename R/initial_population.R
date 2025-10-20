@@ -1,14 +1,13 @@
-setwd("~/R_project/smoking prevalence projection/R")
-
+setwd("C:/Users/TMPACGAG/OneDrive - Birmingham City Council/Documents/R projects/addiction team/smoking prevalence projection/R")
 library(tidyverse)
 library(writexl)
 library(data.table)
 
 
 
-Population_females <- read_csv("~/R_project/smoking prevalence projection/2022 SNPP Population females.csv")
+Population_females <- read_csv("C:/Users/TMPACGAG/OneDrive - Birmingham City Council/Documents/R projects/addiction team/smoking prevalence projection/2022 SNPP Population females.csv")
 
-Population_males <- read_csv("~/R_project/smoking prevalence projection/2022 SNPP Population males.csv")
+Population_males <- read_csv("C:/Users/TMPACGAG/OneDrive - Birmingham City Council/Documents/R projects/addiction team/smoking prevalence projection/2022 SNPP Population males.csv")
 ######################################################################################################
 #since i am injecting new population only at age 13
 #i will only need data from 202to 2047 fro age 13
@@ -101,7 +100,7 @@ Population_females_2347 = Population_females %>%
 #use the prevalence data show we know the proportion of smoker, nonsmoker and exsmoker in birmingham for initial states
 #bind all the data above
 
-smokingprev_allage = read_excel("~/R_project/smoking prevalence projection/processed data/smokingprev_allage.xlsx")
+smokingprev_allage = read_excel("C:/Users/TMPACGAG/OneDrive - Birmingham City Council/Documents/R projects/addiction team/smoking prevalence projection/processed data/smokingprev_allage.xlsx")
 
 
 population_intial_states = rbindlist(list(Population_males_2022,Population_females_2022,Population_males_2347,Population_females_2347)) %>% 

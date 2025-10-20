@@ -1,14 +1,15 @@
-setwd("~/R_project/smoking prevalence projection/R")
+setwd("C:/Users/TMPACGAG/OneDrive - Birmingham City Council/Documents/R projects/addiction team/smoking prevalence projection/R")
 
 library(tidyverse)
 library(readxl)
 library(data.table)
+library(writexl)
 
 # https://www.ons.gov.uk/peoplepopulationandcommunity/healthandsocialcare/healthandlifeexpectancies/bulletins/adultsmokinghabitsingreatbritain/2021/relateddata
 
 
 
-smoking_prev_adult =  read_excel("~/R_project/smoking prevalence projection/smokinghabitsintheukanditsconstituentcountries.xlsx", 
+smoking_prev_adult =  read_excel("~/R projects/addiction team/smoking prevalence projection/smokinghabitsintheukanditsconstituentcountries.xlsx", 
                                  sheet = "Table_1", skip = 8)
 
 
@@ -120,6 +121,14 @@ smokingprev_allage = rbindlist(list(smoking_prev_adult,smoking_teen_11_15,smokin
   mutate(Percentage = Percentage/100,
          UCL = UCL/100,
          LCL = LCL/100)
+
+
+#set all 13 as non smoker
+smokingprev_allage =smokingprev_allage %>% 
+  mutate(Percentage = ifelse(Age == 13 & Initial == "Non smoker",1,Percentage),
+         Percentage = ifelse(Age == 13 & Initial == "Ex-smoker",0,Percentage),
+         Percentage = ifelse(Age == 13 & Initial == "Current smoker",0,Percentage))
+
 
 
 
