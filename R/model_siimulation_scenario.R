@@ -113,7 +113,7 @@ library(tidyr)
 
 
 simulate_model <- function(scenario = 0, selected_gender = "Women", verbose =TRUE,zero_migration = FALSE) {
-  zero_migration <- TRUE  # set once above the loop
+
   
   if (verbose) {
     message("▶ Starting simulation | Scenario: ", scenario, " | Sex: ", selected_gender)
