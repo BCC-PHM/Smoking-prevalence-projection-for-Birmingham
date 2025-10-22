@@ -67,6 +67,8 @@ The trend is most likely similar to the published DHSC's model where both models
 
 In addition, the quit and relapse probabilities in this model were calculated as a weighted average by deprivation quintile. Given Birmingham is one of the most deprived local authorities, the quit and relapse rates are lower relative to the national average. Consequently, less individuals quit and more individuals transition back from ex-smoker to current smoker states, resulting in a slower early decline in prevalence before reaching equilibrium.
 
+Moreover, this analysis employed an open-cohort markov model, meaning that migration was incorporated, whereas the DHSC model was based on a closed cohort. This might help explain why the decline in smoking prevalence was slower in this analysis compared to the DHSC's model.
+
 ```{r}
 #| echo: false
 all_scenario <- read_excel("C:/Users/TMPACGAG/OneDrive - Birmingham City Council/Documents/R projects/addiction team/smoking prevalence projection/result/all_scenario.xlsx")
