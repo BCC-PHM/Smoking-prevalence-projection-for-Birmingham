@@ -9,19 +9,19 @@ library(writexl)
 #load all the processed data i need
 
 #population data for intials 
-population = read_excel("processed data/population_intial_states.xlsx")
+population = read_excel("processed data/population_intial_states2024.xlsx")
 
 #migration data
-migration = read_excel("processed data/final_net_migration_by_states.xlsx")
+migration = read_excel("processed data/final_net_migration_by_states2024.xlsx")
 
 #transP
-Initiation = read_excel("processed data/transition_probabilities_birmingham.xlsx", 
+Initiation = read_excel("processed data/transition_probabilities_birmingham_2024.xlsx", 
                         sheet = "Initiation")
 
-Quit =  read_excel("processed data/transition_probabilities_birmingham.xlsx", 
+Quit =  read_excel("processed data/transition_probabilities_birmingham_2024.xlsx", 
                    sheet = "Quit")
 
-Relapse =  read_excel("processed data/transition_probabilities_birmingham.xlsx", 
+Relapse =  read_excel("processed data/transition_probabilities_birmingham_2024.xlsx", 
                       sheet = "Relapse")
 
 #mortality
@@ -76,7 +76,7 @@ scenario_multiplier =function(p_init, year, age, scenario =1){
 
 
 ages  = 13:100
-years = 2022:2047
+years = 2024:2047  #changed to 2024
 selected_gender = "Women"   #change to Women to re run
 longtermquit = 0.0087   # only apply to Ex10
 
@@ -95,7 +95,7 @@ population_fix = population %>%
 # helper: initialise baseline vector for a given state
 get_init_vec = function(pop, sex, state){
   v = pop %>% 
-    filter(year == 2022,
+    filter(year == 2024, #changed to 2024
            Sex == sex,
            Initial == state,
            Age %in% ages) %>%
@@ -127,9 +127,9 @@ simulate_model <- function(scenario = 0, selected_gender = "Women", verbose =TRU
   Ex6 <- N; Ex7 <- N; Ex8 <- N; Ex9 <- N; Ex10 <- N; D <- N
   
   # --- baseline year 2022 ---
-  N[, "2022"]   <- get_init_vec(population_fix, selected_gender, "Non smoker")
-  C[, "2022"]   <- get_init_vec(population_fix, selected_gender, "Current smoker")
-  Ex1[, "2022"] <- get_init_vec(population_fix, selected_gender, "Ex-smoker")
+  N[, "2024"]   <- get_init_vec(population_fix, selected_gender, "Non smoker")   #changed to 2024
+  C[, "2024"]   <- get_init_vec(population_fix, selected_gender, "Current smoker")#changed to 2024
+  Ex1[, "2024"] <- get_init_vec(population_fix, selected_gender, "Ex-smoker")#changed to 2024
   
   # ---- MAIN LOOP ----
   for (t in 1:(length(years)-1)) {
@@ -296,9 +296,9 @@ all_scenarios <- expand.grid(
   })
 
 
- write_xlsx(all_scenarios, "all_scenario.xlsx")
+ write_xlsx(all_scenarios, "all_scenario2024.xlsx")
 
-all_scenario <- read_excel("result/all_scenario.xlsx")
+# all_scenario <- read_excel("result/all_scenario.xlsx")
 
 
 ######################################################################

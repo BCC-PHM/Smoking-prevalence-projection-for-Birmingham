@@ -9,7 +9,7 @@ library(writexl)
 
 
 
-smoking_prev_adult =  read_excel("~/R projects/addiction team/smoking prevalence projection/smokinghabitsintheukanditsconstituentcountries.xlsx", 
+smoking_prev_adult =  read_excel("~/R projects/addiction team/smoking prevalence projection/smokinghabitsintheukanditsconstituentcountries2024v2.xlsx", 
                                  sheet = "Table_1", skip = 8)
 
 
@@ -23,15 +23,15 @@ smoking_prev_adult = smoking_prev_adult %>%
   filter(`_Country`== "England" & `_Sex` %in% c("Men", "Women")) %>% 
   select( Sex = `_Sex`,
           AgeGroup = `_Agegroup`,
-         Currentsmoker = `_2023_Currentsmokers_%`,
-         Currentsmoker_LCL=`_2023_Currentsmokers_LCL`,
-         Currentsmoker_UCL = `_2023_Currentsmokers_UCL`,
-         EXsmoker = `_2023_Ex-smokers_%`,
-         EXsmoker_LCL = `_2023_Ex-smokers_LCL`,
-         EXsmoker_UCL = `_2023_Ex-smokers_UCL`,
-         Neversmoker = `_2023_Neversmoked_%`,
-         Neversmoker_LCL = `_2023_Neversmoked_LCL`,
-         Neversmoker_UCL = `_2023_Neversmoked_UCL`) %>% 
+         Currentsmoker = `_2024_Currentsmokers_%`,
+         Currentsmoker_LCL=`_2024_Currentsmokers_LCL`,
+         Currentsmoker_UCL = `_2024_Currentsmokers_UCL`,
+         EXsmoker = `_2024_Ex-smokers_%`,
+         EXsmoker_LCL = `_2024_Ex-smokers_LCL`,
+         EXsmoker_UCL = `_2024_Ex-smokers_UCL`,
+         Neversmoker = `_2024_Neversmoked_%`,
+         Neversmoker_LCL = `_2024_Neversmoked_LCL`,
+         Neversmoker_UCL = `_2024_Neversmoked_UCL`) %>% 
   pivot_longer(
     cols = -c(Sex, AgeGroup),
     names_to = c("Initial", "Measure"),
@@ -132,7 +132,7 @@ smokingprev_allage =smokingprev_allage %>%
 
 
 
-write_xlsx(smokingprev_allage, "smokingprev_allage.xlsx")
+write_xlsx(smokingprev_allage, "smokingprev_allage2024.xlsx")
 
 
 
@@ -143,8 +143,8 @@ write_xlsx(smokingprev_allage, "smokingprev_allage.xlsx")
 
 
 
-LA_prev_adults = read_excel("~/R_project/smoking prevalence projection/smokinghabitsintheukanditsconstituentcountries.xlsx", 
-                            sheet = "Table_4", skip = 9)
+LA_prev_adults = read_excel("~/R projects/addiction team/smoking prevalence projection/smokinghabitsintheukanditsconstituentcountries2024v2.xlsx", 
+                            sheet = "Table_4a", skip = 13)
 
 
 colnames(LA_prev_adults) =gsub(" ", "", colnames(LA_prev_adults))
@@ -158,16 +158,16 @@ LA_prev_adults$`_LocalAuthorityName_[note6][note20][note21]`
 LA_prev_adults  %>% 
   filter(`_LocalAuthorityName_[note6][note20][note21]`== "Birmingham" & `_Sex` %in% c("Men", "Women")) %>% 
   select( Sex = `_Sex`,
-          Currentsmoker = `_2023_Currentsmokers_%`,
-          Currentsmoker_LCL=`_2023_Currentsmokers_LCL`,
-          Currentsmoker_UCL = `_2023_Currentsmokers_UCL`,
-          EXsmoker = `_2023_Ex-smokers_%`,
-          EXsmoker_LCL = `_2023_Ex-smokers_LCL`,
-          EXsmoker_UCL = `_2023_Ex-smokers_UCL`,
-          Neversmoker = `_2023_Neversmoked_%`,
-          Neversmoker_LCL = `_2023_Neversmoked_LCL`,
-          Neversmoker_UCL = `_2023_Neversmoked_UCL`,
-          Sample = `_2023_Samplesize_[note3]`)
+          Currentsmoker = `_2024_Currentsmokers_%`,
+          Currentsmoker_LCL=`_2024_Currentsmokers_LCL`,
+          Currentsmoker_UCL = `_2024_Currentsmokers_UCL`,
+          EXsmoker = `_2024_Ex-smokers_%`,
+          EXsmoker_LCL = `_2024_Ex-smokers_LCL`,
+          EXsmoker_UCL = `_2024_Ex-smokers_UCL`,
+          Neversmoker = `_2024_Neversmoked_%`,
+          Neversmoker_LCL = `_2024_Neversmoked_LCL`,
+          Neversmoker_UCL = `_2024_Neversmoked_UCL`,
+          Sample = `_2024_Samplesize_[note3]`)
   
 
 

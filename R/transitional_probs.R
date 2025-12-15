@@ -83,7 +83,7 @@ TransP_N_2_C <- read_excel("smoking_state_transition_probabilities_England.xlsx"
 #use 2022 value 
 
 TransP_N_2_C  = TransP_N_2_C %>% 
-  filter(year == "2022") %>% 
+  filter(year == "2024") %>%   #get 2023 or 2024 rate 
   mutate(sex = ifelse(sex == "Female",
                       "Women",
                       "Men"),
@@ -94,7 +94,7 @@ TransP_N_2_C  = TransP_N_2_C %>%
 
 # make grid of missing ages 31–100 x sex
 ages_fill <- expand_grid(
-  year = 2022,
+  year = 2024, #get 2022 or 2023 rate 
   age  = 31:100,
   sex  = c("Men", "Women")
 ) %>%
@@ -121,9 +121,9 @@ simsmoke_male <- read_excel("Initiation and Cessation Rates SimSmoke model (IOM)
                                                                          sheet = "Male Initiation", skip = 2)
 simsmoke_male  = simsmoke_male %>% 
   filter(Age %in% c(11:16)) %>% 
-  select(Age, `2022`) %>% 
-  mutate(denominator = lead(`2022`, default = 1),
-         scaling = `2022`/denominator,
+  select(Age, `2024`) %>% #get 2022 or 2023 rate 
+  mutate(denominator = lead(`2024`, default = 1),#get 2022 or 2023 rate 
+         scaling = `2024`/denominator, #get 2022 or 2023 rate 
          Sex = "Men") %>% 
   select(Age,scaling,Sex) %>% 
   filter(Age != 16)
@@ -135,9 +135,9 @@ simsmoke_female <- read_excel("Initiation and Cessation Rates SimSmoke model (IO
 
 simsmoke_female = simsmoke_female %>% 
   filter(Age %in% c(11:16)) %>% 
-  select(Age, `2022`) %>% 
-  mutate(denominator = lead(`2022`, default = 1),
-         scaling = `2022`/denominator,
+  select(Age, `2024`) %>% #get 2022 or 2023 rate 
+  mutate(denominator = lead(`2024`, default = 1),#get 2022 or 2023 rate 
+         scaling = `2024`/denominator,#get 2022 or 2023 rate 
          Sex = "Women") %>% 
   select(Age,scaling,Sex) %>% 
   filter(Age !=16)
@@ -169,7 +169,7 @@ TransP_C_2_Ex <- read_excel("smoking_state_transition_probabilities_England.xlsx
 
 
 TransP_C_2_Ex = TransP_C_2_Ex %>% 
-  filter(year == "2022") %>% 
+  filter(year == "2024") %>% #get 2022 or 2023 rate 
   mutate(sex = ifelse(sex == "Female",
                       "Women",
                       "Men"),
@@ -180,7 +180,7 @@ TransP_C_2_Ex = TransP_C_2_Ex %>%
 
 #Fill 90–100 with relapse = 0
 ages_fill_quit<- expand_grid(
-  year = 2022,
+  year = 2024,#get 2022 or 2023 rate 
   age  = 89:100,
   sex  = c("Men", "Women")
 ) %>%
@@ -201,7 +201,7 @@ TransP_EX_2_C = read_excel("smoking_state_transition_probabilities_England.xlsx"
 
 
 TransP_EX_2_C = TransP_EX_2_C  %>% 
-  filter(year == "2022")%>% 
+  filter(year == "2024")%>% #get 2022 or 2023 rate 
   mutate(sex = ifelse(sex == "Female",
                       "Women",
                       "Men"),
@@ -214,7 +214,7 @@ TransP_EX_2_C = TransP_EX_2_C  %>%
 
 #Fill 90–100 with relapse = 0
 ages_fill_relapse<- expand_grid(
-  year = 2022,
+  year = 2024, #get 2022 or 2023 rate 
   age  = 90:100,
   sex  = c("Men", "Women"),
   time_since_quit = 1:10   # all quit states
@@ -237,7 +237,7 @@ write_xlsx(
     Quit = TransP_C_2_Ex,
     Relapse = TransP_EX_2_C
   ),
-  "transition_probabilities_birmingham.xlsx"
+  "transition_probabilities_birmingham_2024.xlsx"
 )
 
 

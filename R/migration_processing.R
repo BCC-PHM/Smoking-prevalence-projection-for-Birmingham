@@ -1,4 +1,4 @@
-setwd("~/R_project/smoking prevalence projection/R")
+setwd("C:/Users/TMPACGAG/OneDrive - Birmingham City Council/Documents/R projects/addiction team/smoking prevalence projection")
 
 library(tidyverse)
 library(writexl)
@@ -7,8 +7,8 @@ library(writexl)
 
 ############################################
 ##internal in migration 
-Internal_in_females <- read_csv("~/R_project/smoking prevalence projection/2022 SNPP Internal in females.csv")
-Internal_in_males <- read_csv("~/R_project/smoking prevalence projection/2022 SNPP Internal in males.csv")
+Internal_in_females <- read_csv("2022 SNPP Internal in females.csv")
+Internal_in_males <- read_csv("2022 SNPP Internal in males.csv")
 
 #male
 Internal_in_males = Internal_in_males %>% 
@@ -50,8 +50,8 @@ Internal_in_females = Internal_in_females %>%
 ##internal out migration 
 
 
-Internal_out_females <- read_csv("~/R_project/smoking prevalence projection/2022 SNPP Internal out females.csv")
-Internal_out_males <- read_csv("~/R_project/smoking prevalence projection/2022 SNPP Internal out males.csv")
+Internal_out_females <- read_csv("2022 SNPP Internal out females.csv")
+Internal_out_males <- read_csv("2022 SNPP Internal out males.csv")
 
 
 
@@ -121,9 +121,9 @@ net_internal_migration_male = Internal_out_males %>%
 ############################################################################################
 ############################################################################################
 #cross boarder migration 
-Cross_border_in_females <- read_csv("~/R_project/smoking prevalence projection/2022 SNPP Cross border in females.csv")
+Cross_border_in_females <- read_csv("2022 SNPP Cross border in females.csv")
 
-Cross_border_in_males <- read_csv("~/R_project/smoking prevalence projection/2022 SNPP Cross border in males.csv")
+Cross_border_in_males <- read_csv("2022 SNPP Cross border in males.csv")
 
 
 
@@ -168,8 +168,8 @@ Cross_border_in_females = Cross_border_in_females %>%
 
 ##cross boarder out migration 
 
-Cross_border_out_females <- read_csv("~/R_project/smoking prevalence projection/2022 SNPP Cross border out females.csv")
-Cross_border_out_males <- read_csv("~/R_project/smoking prevalence projection/2022 SNPP Cross border out males.csv")
+Cross_border_out_females <- read_csv("2022 SNPP Cross border out females.csv")
+Cross_border_out_males <- read_csv("2022 SNPP Cross border out males.csv")
 
 
 
@@ -241,8 +241,8 @@ net_crossborder_migration_male = Cross_border_out_males %>%
 #international migration 
 
 
-International_in_males <- read_csv("~/R_project/smoking prevalence projection/2022 SNPP International in males.csv")
-International_in_females <- read_csv("~/R_project/smoking prevalence projection/2022 SNPP International in females.csv")
+International_in_males <- read_csv("2022 SNPP International in males.csv")
+International_in_females <- read_csv("2022 SNPP International in females.csv")
 
 
 
@@ -287,8 +287,8 @@ International_in_females = International_in_females %>%
 
 
 ##############################
-International_out_females <- read_csv("~/R_project/smoking prevalence projection/2022 SNPP International out females.csv")
-International_out_males <- read_csv("~/R_project/smoking prevalence projection/2022 SNPP International out males.csv")
+International_out_females <- read_csv("2022 SNPP International out females.csv")
+International_out_males <- read_csv("2022 SNPP International out males.csv")
 
 
 #male
@@ -395,7 +395,7 @@ final_net_migration = rbind(net_migration_female,net_migration_male) %>%
 #since we will inject new population from already calcualted projection from ONS, we dont need that 
 
 
-write_xlsx(final_net_migration, "final_net_migration_by_states.xlsx")
+write_xlsx(final_net_migration, "final_net_migration_by_states2024.xlsx")
 
 
 
