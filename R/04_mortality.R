@@ -1,11 +1,10 @@
-setwd("~/R_project/smoking prevalence projection/R")
 
 library(tidyverse)
 library(readxl)
 library(data.table)
-linrary(writexl)
+library(writexl)
 
-national_lifetables <- read_excel("~/R_project/smoking prevalence projection/national_lifetables.xlsx", 
+national_lifetables <- read_excel("data/national_lifetables.xlsx", 
                                   sheet = "2021-2023", skip = 5)
 
 #mortality for male
@@ -218,7 +217,7 @@ female_rr <- bind_rows(female_qx_smoker, female_qx_exsmoker, female_qx_never) %>
 rr_all <- bind_rows(male_rr, female_rr)
 
 #join with prevalence
-smokingprev_allage <- read_excel("~/R_project/smoking prevalence projection/processed data/smokingprev_allage.xlsx")
+smokingprev_allage <- read_excel("processed data/smokingprev_allage.xlsx")
 
 
 df <- smokingprev_allage %>%
@@ -238,6 +237,6 @@ mort_split <- df %>%
   )
 
 
-write_xlsx(mort_split, "mortality_processed.xlsx")
+write_xlsx(mort_split, "processed data/mortality_processed.xlsx")
 
 

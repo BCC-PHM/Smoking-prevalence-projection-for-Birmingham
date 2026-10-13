@@ -1,13 +1,15 @@
-setwd("C:/Users/TMPACGAG/OneDrive - Birmingham City Council/Documents/R projects/addiction team/smoking prevalence projection/R")
 library(tidyverse)
 library(writexl)
 library(data.table)
 
 
 
-Population_females <- read_csv("C:/Users/TMPACGAG/OneDrive - Birmingham City Council/Documents/R projects/addiction team/smoking prevalence projection/2022 SNPP Population females.csv")
+Population_females <- read_csv("data/2022 SNPP Population females.csv")
 
-Population_males <- read_csv("C:/Users/TMPACGAG/OneDrive - Birmingham City Council/Documents/R projects/addiction team/smoking prevalence projection/2022 SNPP Population males.csv")
+Population_males <- read_csv("data/2022 SNPP Population males.csv")
+
+#update on 13/10/2026
+year_filter  = 2025
 ######################################################################################################
 #since i am injecting new population only at age 13
 #i will only need data from 202to 2047 fro age 13
@@ -25,12 +27,12 @@ Population_males_2024 = Population_males %>%
           filter(AGE_GROUP == "90 and over") %>% 
           slice(rep(1, 11)) %>%                      # repeat the row 11 times
           mutate(AGE_GROUP = as.character(90:100)) %>% 
-          mutate(across(`2024`:`2047`, ~ .x / 11))) %>%   # divide each year's value equally
+          mutate(across(`2025`:`2047`, ~ .x / 11))) %>%   # divide each year's value equally
   pivot_longer(cols = c(-AREA_CODE, -AREA_NAME,-COMPONENT,-SEX,-AGE_GROUP),
                names_to = "year",
                values_to = "count") %>% 
   mutate(SEX = "Men") %>% 
-  filter(year ==2024)
+  filter(year == year_filter)
 
 
 
@@ -45,12 +47,12 @@ Population_females_2024 = Population_females %>%
           filter(AGE_GROUP == "90 and over") %>% 
           slice(rep(1, 11)) %>%                      # repeat the row 11 times
           mutate(AGE_GROUP = as.character(90:100)) %>% 
-          mutate(across(`2024`:`2047`, ~ .x / 11))) %>%   # divide each year's value equally
+          mutate(across(`2025`:`2047`, ~ .x / 11))) %>%   # divide each year's value equally
   pivot_longer(cols = c(-AREA_CODE, -AREA_NAME,-COMPONENT,-SEX,-AGE_GROUP),
                names_to = "year",
                values_to = "count") %>% 
   mutate(SEX = "Women") %>% 
-  filter(year ==2024)
+  filter(year ==year_filter)
 
 
 ##########################################################################
@@ -65,12 +67,12 @@ Population_males_2447 = Population_males %>%
           filter(AGE_GROUP == "90 and over") %>% 
           slice(rep(1, 11)) %>%                      # repeat the row 11 times
           mutate(AGE_GROUP = as.character(90:100)) %>% 
-          mutate(across(`2024`:`2047`, ~ .x / 11))) %>%   # divide each year's value equally
+          mutate(across(`2025`:`2047`, ~ .x / 11))) %>%   # divide each year's value equally
   pivot_longer(cols = c(-AREA_CODE, -AREA_NAME,-COMPONENT,-SEX,-AGE_GROUP),
                names_to = "year",
                values_to = "count") %>% 
   mutate(SEX = "Men") %>% 
-  filter(year !=2024) %>% 
+  filter(year !=year_filter) %>% 
   filter(AGE_GROUP == 13)
 
 
@@ -86,12 +88,12 @@ Population_females_2447 = Population_females %>%
           filter(AGE_GROUP == "90 and over") %>% 
           slice(rep(1, 11)) %>%                      # repeat the row 11 times
           mutate(AGE_GROUP = as.character(90:100)) %>% 
-          mutate(across(`2024`:`2047`, ~ .x / 11))) %>%   # divide each year's value equally
+          mutate(across(`2025`:`2047`, ~ .x / 11))) %>%   # divide each year's value equally
   pivot_longer(cols = c(-AREA_CODE, -AREA_NAME,-COMPONENT,-SEX,-AGE_GROUP),
                names_to = "year",
                values_to = "count") %>% 
   mutate(SEX = "Women") %>% 
-  filter(year !=2024)%>% 
+  filter(year !=year_filter)%>% 
   filter(AGE_GROUP == 13)
 
 
@@ -99,8 +101,8 @@ Population_females_2447 = Population_females %>%
 ######################################################################################
 #use the prevalence data show we know the proportion of smoker, nonsmoker and exsmoker in birmingham for initial states
 #bind all the data above
-
-smokingprev_allage = read_excel("C:/Users/TMPACGAG/OneDrive - Birmingham City Council/Documents/R projects/addiction team/smoking prevalence projection/processed data/smokingprev_allage2024.xlsx")
+#update on 13/10/2026 smokingprev_allage2025
+smokingprev_allage = read_excel("processed data/smokingprev_allage2025.xlsx")
 
 
 population_intial_states = rbindlist(list(Population_males_2024,Population_females_2024,Population_males_2447,Population_females_2447)) %>% 
@@ -112,8 +114,8 @@ population_intial_states = rbindlist(list(Population_males_2024,Population_femal
   mutate(count_adjusted = count*Percentage)
 
 
+#update on 13/10/2026 population_intial_states2025
 
-
-write_xlsx(population_intial_states, "population_intial_states2024.xlsx")
+write_xlsx(population_intial_states, "processed data/population_intial_states2025.xlsx")
 
 

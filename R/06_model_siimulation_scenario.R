@@ -1,60 +1,53 @@
-setwd("C:/Users/TMPACGAG/OneDrive - Birmingham City Council/Documents/R projects/addiction team/smoking prevalence projection")
-
 library(tidyverse)
 library(readr)
 library(readxl)
 library(writexl)
 
+#======================================================
+#set the base year here, e.g. 2024 or 2025
+#======================================================
+base_year = 2024
+base_col  = as.character(base_year)
+
 ##########################################################################
 #load all the processed data i need
 
-#population data for intials 
-population = read_excel("processed data/population_intial_states2024.xlsx")
+#population data for intials
+population = read_excel(paste0("processed data/population_intial_states", base_year, ".xlsx"))
 
 #migration data
 migration = read_excel("processed data/final_net_migration_by_states2024.xlsx")
 
 #transP
-Initiation = read_excel("processed data/transition_probabilities_birmingham_2024.xlsx", 
-                        sheet = "Initiation")
+tp_file = paste0("processed data/transition_probabilities_birmingham_", base_year, ".xlsx")
 
-Quit =  read_excel("processed data/transition_probabilities_birmingham_2024.xlsx", 
-                   sheet = "Quit")
-
-Relapse =  read_excel("processed data/transition_probabilities_birmingham_2024.xlsx", 
-                      sheet = "Relapse")
+Initiation = read_excel(tp_file, sheet = "Initiation")
+Quit       = read_excel(tp_file, sheet = "Quit")
+Relapse    = read_excel(tp_file, sheet = "Relapse")
 
 #mortality
 mortality = read_excel("processed data/mortality_processed.xlsx")
-View(mortality_processed)
 
 ###################################################################################
 # cascade helper to apply net migration to ex-smokers without going negative
 
+#------------------------------------------------------
+#apply net ex migration in proportion to ex1-ex10
+#------------------------------------------------------
 cascade_ex = function(ex_vec, net){
   v = ex_vec
+  tot = sum(v)
   if (net == 0) return(v)
-  
-  if (net > 0) {
-    # add new ex-smokers into Ex1
-    v[1] = v[1] + net
+  if (tot <= 0) {
+    v[1] = max(0, v[1] + net)
     return(v)
   }
-  
-  # net < 0 → remove from Ex1 upwards
-  rem = -net
-  for (k in seq_along(v)) {
-    if (rem <= 0) break
-    take = min(v[k], rem)
-    v[k] = v[k] - take
-    rem  = rem - take
-  }
-  v
+  v * max(0, 1 + net / tot)
 }
 
 
 ###################################################################################
-#to model scenario 
+#to model scenario
 scenario_multiplier =function(p_init, year, age, scenario =1){
   multiplier <- case_when(
     scenario == 1 ~ 0.90,  # 10% reduction
@@ -76,26 +69,90 @@ scenario_multiplier =function(p_init, year, age, scenario =1){
 
 
 ages  = 13:100
-years = 2024:2047  #changed to 2024
+years = base_year:2047
 selected_gender = "Women"   #change to Women to re run
 longtermquit = 0.0087   # only apply to Ex10
 
 # --- fix inconsistent labels in population ---
 population_fix = population %>%
   mutate(
-    year = as.numeric(year), 
+    year = as.numeric(year),
     Initial = recode(Initial,
                      "Never smoker" = "Non smoker",
                      "never smoker" = "Non smoker",
                      "Non-smoker"   = "Non smoker")
   )
 
+#======================================================
+#split base year ex-smokers across ex1-ex10 by quit flow
+#======================================================
 
+#------------------------------------------------------
+#current and ex counts by sex and age in base year
+#------------------------------------------------------
+states_2025 = population_fix %>%
+  filter(year == base_year, Initial %in% c("Current smoker", "Ex-smoker")) %>%
+  select(Sex, Age, Initial, count_adjusted) %>%
+  pivot_wider(names_from = Initial, values_from = count_adjusted) %>%
+  left_join(select(Quit, Sex, Age, tp_C_2_Ex), by = c("Sex", "Age")) %>%
+  mutate(tp_C_2_Ex = replace_na(tp_C_2_Ex, 0))
+
+#------------------------------------------------------
+#share of quitters not yet relapsed by year k
+#------------------------------------------------------
+ex_survival = Relapse %>%
+  arrange(Sex, Age, time_since_quit) %>%
+  group_by(Sex, Age) %>%
+  mutate(surv = lag(cumprod(1 - tp_EX_2_C), default = 1)) %>%
+  ungroup() %>%
+  filter(time_since_quit <= 9) %>%
+  select(Sex, Age, time_since_quit, surv)
+
+#------------------------------------------------------
+#ex1-ex9 from recent quit flow, capped at total ex
+#------------------------------------------------------
+ex1_9 = states_2025 %>%
+  left_join(ex_survival, by = c("Sex", "Age")) %>%
+  mutate(flow = `Current smoker` * tp_C_2_Ex * surv) %>%
+  group_by(Sex, Age) %>%
+  mutate(count = flow * pmin(1, `Ex-smoker` / pmax(sum(flow), 1e-9))) %>%
+  ungroup() %>%
+  transmute(Sex, Age, State = paste0("Ex", time_since_quit), count)
+
+#------------------------------------------------------
+#remainder goes to ex10
+#------------------------------------------------------
+ex10 = ex1_9 %>%
+  group_by(Sex, Age) %>%
+  summarise(ex1_9 = sum(count), .groups = "drop") %>%
+  left_join(states_2025, by = c("Sex", "Age")) %>%
+  transmute(Sex, Age, State = "Ex10", count = `Ex-smoker` - ex1_9)
+
+ex_split_2025 = bind_rows(ex1_9, ex10)
+
+#------------------------------------------------------
+#check split totals match original ex-smoker counts
+#------------------------------------------------------
+ex_split_2025 %>%
+  group_by(Sex, Age) %>%
+  summarise(total = sum(count), .groups = "drop") %>%
+  left_join(select(states_2025, Sex, Age, `Ex-smoker`), by = c("Sex", "Age")) %>%
+  summarise(max_diff = max(abs(total - `Ex-smoker`)), min_count = min(ex_split_2025$count))
+
+#------------------------------------------------------
+#helper: base year vector for one ex state
+#------------------------------------------------------
+get_ex_vec = function(sex, state){
+  v = ex_split_2025 %>% filter(Sex == sex, State == state, Age %in% ages)
+  out = setNames(numeric(length(ages)), as.character(ages))
+  out[as.character(v$Age)] = v$count
+  out
+}
 
 # helper: initialise baseline vector for a given state
 get_init_vec = function(pop, sex, state){
-  v = pop %>% 
-    filter(year == 2024, #changed to 2024
+  v = pop %>%
+    filter(year == base_year,
            Sex == sex,
            Initial == state,
            Age %in% ages) %>%
@@ -113,7 +170,7 @@ library(tidyr)
 
 
 simulate_model <- function(scenario = 0, selected_gender = "Women", verbose =TRUE,zero_migration = FALSE) {
-
+  
   
   if (verbose) {
     message("▶ Starting simulation | Scenario: ", scenario, " | Sex: ", selected_gender)
@@ -123,13 +180,22 @@ simulate_model <- function(scenario = 0, selected_gender = "Women", verbose =TRU
   # --- initialise matrices ---
   N   <- matrix(0, nrow=length(ages), ncol=length(years),
                 dimnames=list(as.character(ages), as.character(years)))
-  C   <- N; Ex1 <- N; Ex2 <- N; Ex3 <- N; Ex4 <- N; Ex5 <- N; 
+  C   <- N; Ex1 <- N; Ex2 <- N; Ex3 <- N; Ex4 <- N; Ex5 <- N;
   Ex6 <- N; Ex7 <- N; Ex8 <- N; Ex9 <- N; Ex10 <- N; D <- N
   
-  # --- baseline year 2022 ---
-  N[, "2024"]   <- get_init_vec(population_fix, selected_gender, "Non smoker")   #changed to 2024
-  C[, "2024"]   <- get_init_vec(population_fix, selected_gender, "Current smoker")#changed to 2024
-  Ex1[, "2024"] <- get_init_vec(population_fix, selected_gender, "Ex-smoker")#changed to 2024
+  # --- baseline year ---
+  N[, base_col]    = get_init_vec(population_fix, selected_gender, "Non smoker")
+  C[, base_col]    = get_init_vec(population_fix, selected_gender, "Current smoker")
+  Ex1[, base_col]  = get_ex_vec(selected_gender, "Ex1")
+  Ex2[, base_col]  = get_ex_vec(selected_gender, "Ex2")
+  Ex3[, base_col]  = get_ex_vec(selected_gender, "Ex3")
+  Ex4[, base_col]  = get_ex_vec(selected_gender, "Ex4")
+  Ex5[, base_col]  = get_ex_vec(selected_gender, "Ex5")
+  Ex6[, base_col]  = get_ex_vec(selected_gender, "Ex6")
+  Ex7[, base_col]  = get_ex_vec(selected_gender, "Ex7")
+  Ex8[, base_col]  = get_ex_vec(selected_gender, "Ex8")
+  Ex9[, base_col]  = get_ex_vec(selected_gender, "Ex9")
+  Ex10[, base_col] = get_ex_vec(selected_gender, "Ex10")
   
   # ---- MAIN LOOP ----
   for (t in 1:(length(years)-1)) {
@@ -173,19 +239,19 @@ simulate_model <- function(scenario = 0, selected_gender = "Women", verbose =TRU
         if (zero_migration) {
           mig_N <- 0; mig_C <- 0; mig_Ex1 <- 0
         } else {
-        # --- migration ---
-        mig_N   = migration %>% filter(year==next_year, Age==next_age, Sex==selected_gender, Initial=="Non smoker") %>% pull(net_migration_adjusted) %>% {if(length(.)==0) 0 else .}
-        mig_C   = migration %>% filter(year==next_year, Age==next_age, Sex==selected_gender, Initial=="Current smoker") %>% pull(net_migration_adjusted) %>% {if(length(.)==0) 0 else .}
-        mig_Ex1 = migration %>% filter(year==next_year, Age==next_age, Sex==selected_gender, Initial=="Ex-smoker") %>% pull(net_migration_adjusted) %>% {if(length(.)==0) 0 else .}
+          # --- migration ---
+          mig_N   = migration %>% filter(year==next_year, Age==next_age, Sex==selected_gender, Initial=="Non smoker") %>% pull(net_migration_adjusted) %>% {if(length(.)==0) 0 else .}
+          mig_C   = migration %>% filter(year==next_year, Age==next_age, Sex==selected_gender, Initial=="Current smoker") %>% pull(net_migration_adjusted) %>% {if(length(.)==0) 0 else .}
+          mig_Ex1 = migration %>% filter(year==next_year, Age==next_age, Sex==selected_gender, Initial=="Ex-smoker") %>% pull(net_migration_adjusted) %>% {if(length(.)==0) 0 else .}
         }
         # --- Never smokers ---
-        N[as.character(next_age), as.character(next_year)] = 
+        N[as.character(next_age), as.character(next_year)] =
           N[as.character(a), as.character(this_year)] * (1 - p_init - qN) +
           Ex10[as.character(a), as.character(this_year)]*longtermquit +
           mig_N
         
         # --- Current smokers ---
-        C[as.character(next_age), as.character(next_year)] = 
+        C[as.character(next_age), as.character(next_year)] =
           C[as.character(a), as.character(this_year)] * (1 - tp_C_2_Ex - qC) +
           N[as.character(a), as.character(this_year)] * p_init +
           mig_C +
@@ -230,7 +296,7 @@ simulate_model <- function(scenario = 0, selected_gender = "Women", verbose =TRU
         
         
         # --- Deaths ---
-        D[as.character(next_age),as.character(next_year)] = 
+        D[as.character(next_age),as.character(next_year)] =
           D[as.character(a),as.character(this_year)] +
           N[as.character(a),as.character(this_year)]*qN +
           C[as.character(a),as.character(this_year)]*qC +
@@ -244,9 +310,6 @@ simulate_model <- function(scenario = 0, selected_gender = "Women", verbose =TRU
           Ex8[as.character(a),as.character(this_year)]*qEx +
           Ex9[as.character(a),as.character(this_year)]*qEx +
           Ex10[as.character(a),as.character(this_year)]*qEx
-        
-        # Ex-smokers (cascade as before) ...
-        # [keep your cascade_ex logic here]
       }
     }
     
@@ -288,15 +351,15 @@ simulate_model <- function(scenario = 0, selected_gender = "Women", verbose =TRU
 # --- wrapper to run all scenarios and both sexes ---
 all_scenarios <- expand.grid(
   scenario = 0:4,                      # 0 = baseline, 1–4 = policy scenarios
-  sex = c("Men", "Women"), 
+  sex = c("Men", "Women"),
   stringsAsFactors = FALSE
 ) %>%
   purrr::pmap_dfr(function(scenario, sex) {
     simulate_model(scenario = scenario, selected_gender = sex)
   })
 
-
- write_xlsx(all_scenarios, "all_scenario2024.xlsx")
+#output file named by base year so runs don't overwrite each other
+write_xlsx(all_scenarios, paste0("output/all_scenario", base_year, ".xlsx"))
 
 # all_scenario <- read_excel("result/all_scenario.xlsx")
 
@@ -505,3 +568,6 @@ all_scenarios <- expand.grid(
 # 
 
 
+ population_fix %>% 
+   filter(Sex == "Men", Age >= 18) %>% 
+   count(year, Initial)

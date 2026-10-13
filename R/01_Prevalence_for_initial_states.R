@@ -1,5 +1,3 @@
-setwd("C:/Users/TMPACGAG/OneDrive - Birmingham City Council/Documents/R projects/addiction team/smoking prevalence projection/R")
-
 library(tidyverse)
 library(readxl)
 library(data.table)
@@ -7,10 +5,11 @@ library(writexl)
 
 # https://www.ons.gov.uk/peoplepopulationandcommunity/healthandsocialcare/healthandlifeexpectancies/bulletins/adultsmokinghabitsingreatbritain/2021/relateddata
 
+#13/10/2026 got this from the followinglink
+#https://www.ons.gov.uk/peoplepopulationandcommunity/healthandsocialcare/healthandlifeexpectancies/datasets/smokinghabitsintheukanditsconstituentcountries
 
-
-smoking_prev_adult =  read_excel("~/R projects/addiction team/smoking prevalence projection/smokinghabitsintheukanditsconstituentcountries2024v2.xlsx", 
-                                 sheet = "Table_1", skip = 8)
+smoking_prev_adult =  read_excel("data/smokinghabitsintheukanditsconstituentcountries202609221121.xlsx", 
+                                 sheet = "Table_1", skip = 9)
 
 
 colnames(smoking_prev_adult) =gsub(" ", "", colnames(smoking_prev_adult))
@@ -20,18 +19,19 @@ colnames(smoking_prev_adult) =gsub("\r\n", "_", colnames(smoking_prev_adult))
 colnames(smoking_prev_adult) = paste0("_", colnames(smoking_prev_adult))
 
 smoking_prev_adult = smoking_prev_adult %>% 
-  filter(`_Country`== "England" & `_Sex` %in% c("Men", "Women")) %>% 
+  filter(`_Countryornation`== "England" & `_Sex` %in% c("Men", "Women")) %>% 
+  filter(`_Year` == 2025) %>% 
   select( Sex = `_Sex`,
           AgeGroup = `_Agegroup`,
-         Currentsmoker = `_2024_Currentsmokers_%`,
-         Currentsmoker_LCL=`_2024_Currentsmokers_LCL`,
-         Currentsmoker_UCL = `_2024_Currentsmokers_UCL`,
-         EXsmoker = `_2024_Ex-smokers_%`,
-         EXsmoker_LCL = `_2024_Ex-smokers_LCL`,
-         EXsmoker_UCL = `_2024_Ex-smokers_UCL`,
-         Neversmoker = `_2024_Neversmoked_%`,
-         Neversmoker_LCL = `_2024_Neversmoked_LCL`,
-         Neversmoker_UCL = `_2024_Neversmoked_UCL`) %>% 
+         Currentsmoker = `_Currentsmokers_%`,
+         Currentsmoker_LCL=`_Currentsmokers_LCL`,
+         Currentsmoker_UCL = `_Currentsmokers_UCL`,
+         EXsmoker = `_Ex-smokers_%`,
+         EXsmoker_LCL = `_Ex-smokers_LCL`,
+         EXsmoker_UCL = `_Ex-smokers_UCL`,
+         Neversmoker = `_Neversmoked_%`,
+         Neversmoker_LCL = `_Neversmoked_LCL`,
+         Neversmoker_UCL = `_Neversmoked_UCL`) %>% 
   pivot_longer(
     cols = -c(Sex, AgeGroup),
     names_to = c("Initial", "Measure"),
@@ -53,7 +53,16 @@ smoking_prev_adult = smoking_prev_adult %>%
                      "EXsmoker" = "Ex-smoker",
                      "Neversmoker" = "Non smoker"
     )
-  )
+  ) %>% 
+  filter(AgeGroup != "All 18 and over") %>% 
+  mutate(AgeGroup = recode(AgeGroup,
+                           "18 to 24"   = "18-24",
+                           "25 to 34"   = "25-34",
+                           "35 to 44"   = "35-44",
+                           "45 to 54"   = "45-54",
+                           "55 to 64"   = "55-64",
+                           "65 and over" = "65+"
+  ))
 
 ###
 #https://digital.nhs.uk/data-and-information/publications/statistical/smoking-drinking-and-drug-use-among-young-people-in-england/2023
@@ -87,9 +96,6 @@ smoking_teen_16_17 = data.frame(
                 7.8, 1, 100-1-7.8),  
   LCL = 0,
   UCL = 0
-  
-  
-  
 )
 
 #create an age to age group transformation 
@@ -131,8 +137,8 @@ smokingprev_allage =smokingprev_allage %>%
 
 
 
-
-write_xlsx(smokingprev_allage, "smokingprev_allage2024.xlsx")
+#updated to smokingprev_allage2025 on 13/10/2026
+write_xlsx(smokingprev_allage, "processed data/smokingprev_allage2025.xlsx")
 
 
 
@@ -143,7 +149,7 @@ write_xlsx(smokingprev_allage, "smokingprev_allage2024.xlsx")
 
 
 
-LA_prev_adults = read_excel("~/R projects/addiction team/smoking prevalence projection/smokinghabitsintheukanditsconstituentcountries2024v2.xlsx", 
+LA_prev_adults = read_excel("data/smokinghabitsintheukanditsconstituentcountries2024v2.xlsx", 
                             sheet = "Table_4a", skip = 13)
 
 

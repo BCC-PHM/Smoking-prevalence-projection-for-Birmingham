@@ -1,6 +1,3 @@
-setwd("C:/Users/TMPACGAG/OneDrive - Birmingham City Council/Documents/R projects/addiction team/smoking prevalence projection")
-
-
 library(tidyverse)
 library(readxl)
 library(data.table)
@@ -11,10 +8,12 @@ library(writexl)
 #need to pull a weighted average transP
 #by using proportion of Birmingham population in each decile 
 
+#change "2024"  on 13/10/2026
+year_filter = "2025"
 
 
 ###########################
-deprivation_2019_all_indicies_birmingham_postcodes <- read_csv("deprivation-2019-all-indicies-birmingham-postcodes.csv")
+deprivation_2019_all_indicies_birmingham_postcodes <- read_csv("data/deprivation-2019-all-indicies-birmingham-postcodes.csv")
 
 
 deprivation_2019_all_indicies_birmingham_postcodes = deprivation_2019_all_indicies_birmingham_postcodes %>% 
@@ -26,7 +25,7 @@ deprivation_2019_all_indicies_birmingham_postcodes = deprivation_2019_all_indici
 
 ###########################
 
-lsoapopulation2021 <- read_excel("lsoapopulation2021.xlsx", 
+lsoapopulation2021 <- read_excel("data/lsoapopulation2021.xlsx", 
                                  sheet = "Mid-2022 LSOA 2021", skip = 3)
 
 
@@ -76,14 +75,14 @@ smoking_prev_by_imd_birm = smoking_prev_by_imd_uk %>%
 
 
 #transP from non smoker/never to current smoker 
-TransP_N_2_C <- read_excel("smoking_state_transition_probabilities_England.xlsx", 
+TransP_N_2_C <- read_excel("data/smoking_state_transition_probabilities_England.xlsx", 
                                                              sheet = "Initiation", skip = 1)
 
 
 #use 2022 value 
 
 TransP_N_2_C  = TransP_N_2_C %>% 
-  filter(year == "2024") %>%   #get 2023 or 2024 rate 
+  filter(year == year_filter) %>%   #get 2023 or 2024 rate 
   mutate(sex = ifelse(sex == "Female",
                       "Women",
                       "Men"),
@@ -94,7 +93,7 @@ TransP_N_2_C  = TransP_N_2_C %>%
 
 # make grid of missing ages 31–100 x sex
 ages_fill <- expand_grid(
-  year = 2024, #get 2022 or 2023 rate 
+  year = 2025, #get 2022 or 2023 rate 
   age  = 31:100,
   sex  = c("Men", "Women")
 ) %>%
@@ -117,27 +116,27 @@ TransP_N_2_C = bind_rows(TransP_N_2_C,ages_fill ) %>%
 
 # it basically means we need to multiply a fraction to scale down the sheffield's rates by a fraction 
 #get male ratio
-simsmoke_male <- read_excel("Initiation and Cessation Rates SimSmoke model (IOM)_03122015.xlsx", 
+simsmoke_male <- read_excel("data/Initiation and Cessation Rates SimSmoke model (IOM)_03122015.xlsx", 
                                                                          sheet = "Male Initiation", skip = 2)
 simsmoke_male  = simsmoke_male %>% 
   filter(Age %in% c(11:16)) %>% 
-  select(Age, `2024`) %>% #get 2022 or 2023 rate 
-  mutate(denominator = lead(`2024`, default = 1),#get 2022 or 2023 rate 
-         scaling = `2024`/denominator, #get 2022 or 2023 rate 
+  select(Age, `2025`) %>% #get 2022 or 2023 rate 
+  mutate(denominator = lead(`2025`, default = 1),#get 2022 or 2023 rate 
+         scaling = `2025`/denominator, #get 2022 or 2023 rate 
          Sex = "Men") %>% 
   select(Age,scaling,Sex) %>% 
   filter(Age != 16)
 
 #get female ratio 
-simsmoke_female <- read_excel("Initiation and Cessation Rates SimSmoke model (IOM)_03122015.xlsx", 
+simsmoke_female <- read_excel("data/Initiation and Cessation Rates SimSmoke model (IOM)_03122015.xlsx", 
                                                                          sheet = "Female Initiation", skip=2)
 
 
 simsmoke_female = simsmoke_female %>% 
   filter(Age %in% c(11:16)) %>% 
-  select(Age, `2024`) %>% #get 2022 or 2023 rate 
-  mutate(denominator = lead(`2024`, default = 1),#get 2022 or 2023 rate 
-         scaling = `2024`/denominator,#get 2022 or 2023 rate 
+  select(Age, `2025`) %>% #get 2022 or 2023 rate 
+  mutate(denominator = lead(`2025`, default = 1),#get 2022 or 2023 rate 
+         scaling = `2025`/denominator,#get 2022 or 2023 rate 
          Sex = "Women") %>% 
   select(Age,scaling,Sex) %>% 
   filter(Age !=16)
@@ -162,14 +161,14 @@ TransP_N_2_C =TransP_N_2_C %>%
 ###########################################################
 #transP from current smoker to ex smoker
 
-TransP_C_2_Ex <- read_excel("smoking_state_transition_probabilities_England.xlsx", 
+TransP_C_2_Ex <- read_excel("data/smoking_state_transition_probabilities_England.xlsx", 
                            sheet = "Quit", skip = 1)
 
 
 
 
 TransP_C_2_Ex = TransP_C_2_Ex %>% 
-  filter(year == "2024") %>% #get 2022 or 2023 rate 
+  filter(year == year_filter) %>% #get 2022 or 2023 rate 
   mutate(sex = ifelse(sex == "Female",
                       "Women",
                       "Men"),
@@ -180,7 +179,7 @@ TransP_C_2_Ex = TransP_C_2_Ex %>%
 
 #Fill 90–100 with relapse = 0
 ages_fill_quit<- expand_grid(
-  year = 2024,#get 2022 or 2023 rate 
+  year = 2025,#get 2022 or 2023 rate 
   age  = 89:100,
   sex  = c("Men", "Women")
 ) %>%
@@ -196,12 +195,12 @@ TransP_C_2_Ex = bind_rows(TransP_C_2_Ex, ages_fill_quit)%>%
 ###########################################################
 #transP_EX_2_C
 
-TransP_EX_2_C = read_excel("smoking_state_transition_probabilities_England.xlsx", 
+TransP_EX_2_C = read_excel("data/smoking_state_transition_probabilities_England.xlsx", 
            sheet = "Relapse", skip = 1)
 
 
 TransP_EX_2_C = TransP_EX_2_C  %>% 
-  filter(year == "2024")%>% #get 2022 or 2023 rate 
+  filter(year == year_filter)%>% #get 2022 or 2023 rate 
   mutate(sex = ifelse(sex == "Female",
                       "Women",
                       "Men"),
@@ -214,7 +213,7 @@ TransP_EX_2_C = TransP_EX_2_C  %>%
 
 #Fill 90–100 with relapse = 0
 ages_fill_relapse<- expand_grid(
-  year = 2024, #get 2022 or 2023 rate 
+  year = 2025, #get 2022 or 2023 rate 
   age  = 90:100,
   sex  = c("Men", "Women"),
   time_since_quit = 1:10   # all quit states
@@ -229,7 +228,7 @@ TransP_EX_2_C = bind_rows(TransP_EX_2_C, ages_fill_relapse) %>%
 
 
 ###############################################################
-
+#change transition_probabilities_birmingham_2025  on 13/10/2026
 
 write_xlsx(
   list(
@@ -237,7 +236,7 @@ write_xlsx(
     Quit = TransP_C_2_Ex,
     Relapse = TransP_EX_2_C
   ),
-  "transition_probabilities_birmingham_2024.xlsx"
+  "processed data/transition_probabilities_birmingham_2025.xlsx"
 )
 
 

@@ -1,0 +1,649 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
+%
+\documentclass[
+  letterpaper,
+  DIV=11,
+  numbers=noendperiod]{scrartcl}
+
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else  
+    % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\setcounter{secnumdepth}{5}
+% Make \paragraph and \subparagraph free-standing
+\makeatletter
+\ifx\paragraph\undefined\else
+  \let\oldparagraph\paragraph
+  \renewcommand{\paragraph}{
+    \@ifstar
+      \xxxParagraphStar
+      \xxxParagraphNoStar
+  }
+  \newcommand{\xxxParagraphStar}[1]{\oldparagraph*{#1}\mbox{}}
+  \newcommand{\xxxParagraphNoStar}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+  \let\oldsubparagraph\subparagraph
+  \renewcommand{\subparagraph}{
+    \@ifstar
+      \xxxSubParagraphStar
+      \xxxSubParagraphNoStar
+  }
+  \newcommand{\xxxSubParagraphStar}[1]{\oldsubparagraph*{#1}\mbox{}}
+  \newcommand{\xxxSubParagraphNoStar}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+\makeatother
+
+
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+% definitions for citeproc citations
+\NewDocumentCommand\citeproctext{}{}
+\NewDocumentCommand\citeproc{mm}{%
+  \begingroup\def\citeproctext{#2}\cite{#1}\endgroup}
+\makeatletter
+ % allow citations to break across lines
+ \let\@cite@ofmt\@firstofone
+ % avoid brackets around text for \cite:
+ \def\@biblabel#1{}
+ \def\@cite#1#2{{#1\if@tempswa , #2\fi}}
+\makeatother
+\newlength{\cslhangindent}
+\setlength{\cslhangindent}{1.5em}
+\newlength{\csllabelwidth}
+\setlength{\csllabelwidth}{3em}
+\newenvironment{CSLReferences}[2] % #1 hanging-indent, #2 entry-spacing
+ {\begin{list}{}{%
+  \setlength{\itemindent}{0pt}
+  \setlength{\leftmargin}{0pt}
+  \setlength{\parsep}{0pt}
+  % turn on hanging indent if param 1 is 1
+  \ifodd #1
+   \setlength{\leftmargin}{\cslhangindent}
+   \setlength{\itemindent}{-1\cslhangindent}
+  \fi
+  % set entry spacing
+  \setlength{\itemsep}{#2\baselineskip}}}
+ {\end{list}}
+\usepackage{calc}
+\newcommand{\CSLBlock}[1]{\hfill\break\parbox[t]{\linewidth}{\strut\ignorespaces#1\strut}}
+\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{\strut#1\strut}}
+\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{\strut#1\strut}}
+\newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
+
+\KOMAoption{captions}{tableheading}
+\makeatletter
+\@ifpackageloaded{caption}{}{\usepackage{caption}}
+\AtBeginDocument{%
+\ifdefined\contentsname
+  \renewcommand*\contentsname{Table of contents}
+\else
+  \newcommand\contentsname{Table of contents}
+\fi
+\ifdefined\listfigurename
+  \renewcommand*\listfigurename{List of Figures}
+\else
+  \newcommand\listfigurename{List of Figures}
+\fi
+\ifdefined\listtablename
+  \renewcommand*\listtablename{List of Tables}
+\else
+  \newcommand\listtablename{List of Tables}
+\fi
+\ifdefined\figurename
+  \renewcommand*\figurename{Figure}
+\else
+  \newcommand\figurename{Figure}
+\fi
+\ifdefined\tablename
+  \renewcommand*\tablename{Table}
+\else
+  \newcommand\tablename{Table}
+\fi
+}
+\@ifpackageloaded{float}{}{\usepackage{float}}
+\floatstyle{ruled}
+\@ifundefined{c@chapter}{\newfloat{codelisting}{h}{lop}}{\newfloat{codelisting}{h}{lop}[chapter]}
+\floatname{codelisting}{Listing}
+\newcommand*\listoflistings{\listof{codelisting}{List of Listings}}
+\makeatother
+\makeatletter
+\makeatother
+\makeatletter
+\@ifpackageloaded{caption}{}{\usepackage{caption}}
+\@ifpackageloaded{subcaption}{}{\usepackage{subcaption}}
+\makeatother
+
+\usepackage{bookmark}
+
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={Smoking prevalence projection for Birmingham},
+  pdfauthor={Chung Au-Yeung},
+  colorlinks=true,
+  linkcolor={blue},
+  filecolor={Maroon},
+  citecolor={Blue},
+  urlcolor={Blue},
+  pdfcreator={LaTeX via pandoc}}
+
+
+\title{Smoking prevalence projection for Birmingham}
+\author{Chung Au-Yeung}
+\date{}
+
+\begin{document}
+\maketitle
+
+\renewcommand*\contentsname{Table of contents}
+{
+\hypersetup{linkcolor=}
+\setcounter{tocdepth}{3}
+\tableofcontents
+}
+
+\section{Introduction}\label{introduction}
+
+Birmingham Public Health has expanded community stop smoking services
+through the Smokefree Generation grant, marking a major step forward in
+the national journey towards becoming smokefree by 2030. The initiative
+expands capacity for cessation services in communities where smoking
+prevalence remains high and introduces targeted interventions for groups
+disproportionately affected by tobacco use---particularly those
+experiencing mental illness, substance use, or homelessness.
+
+While these initiatives strengthen local cessation capacity, reducing
+smoking prevalence across all communities requires sustained monitoring.
+This report aims at developing a model to project the smoking prevalence
+in Birmingham till 2047, allowing the local team to track progress
+toward the 2030 target. The model will also allow scenario testing to
+assess the potential impact of future policies or interventions.
+
+\section{Method}\label{method}
+
+\subsection{Data}\label{data}
+
+This projection draws upon publicly available data from multiple
+reputable sources. Population and migration estimates for Birmingham up
+to 2047 were obtained from the Office for National Statistics (ONS)
+2022-based subnational population projections {[}1{]}. Smoking
+prevalence data were collated from several national datasets, including
+Adult Smoking Habits in England (ONS) {[}2{]}, Smoking, Drinking and
+Drug Use among Young People in England 2023 (NHS Digital) {[}3{]}, and
+the Profile of 16--17-year-old Smokers from Action on Smoking and Health
+(ASH) {[}4{]}.
+
+{The projection has updated with the fololwing data. Population and
+migration estimates for Birmingham up to 2047 were obtained from the
+Office for National Statistics (ONS) using 2024-based subnational
+population projections. {[}1{]}. Adult Smoking Habits in England (ONS)
+{[}5{]}.}
+
+In each simulation cycle, a new cohort of 13-year-olds is introduced as
+non-smokers. As smoking prevalence at this age is negligible, therefore,
+the model assumes no 13-year-olds smoke. The injection of new cohort of
+13-year-olds for each simulation cycle is obtained from ONS subnational
+projection {[}1{]}.
+
+In each cycle, individuals can die from any states. The all-cause
+mortality rates were derived from the national life tables 2021-2023
+{[}6{]} and subsequently averaged across the three smoking status
+groups: non-smokers, current smokers, and ex-smokers. This analysis uses
+the equation from a prior study to calculate the death risk for
+non-smoker {[}7{]}, as shown below:
+
+\[ P_{d0} = \frac{P_{d\text{all}}}{P_{r\text{non}} + P_{r\text{cur}} \times R_{\text{cur}} + P_{r\text{ex}} \times R_{\text{ex}}} \]
+
+\(P_{d\text{all}}\) is the all cause mortality rate while
+\(P_{d\text{rnon}}\), \(P_{d\text{rcur}}\) and \(P_{d\text{rex}}\) are
+prevalence of non-smoker, current smoker and ex-smoker respectively. The
+mortality rate for current smoker are elevated by the relative risk
+\(R_{d\text{cur}}\) and therefore, the rate is
+\(P_{d0} \times R_{\text{cur}}\). Correspondingly, the mortality rate
+for ex-smoker will be \(P_{d0} \times R_{\text{ex}}\). The relative
+risks of death for current and ex-smokers were obtained from published
+literature {[}8{]}. As relative risk vary according to duration since
+quitting (e.g., short-term vs.~long-term cessation) and age at quitting,
+there will have different combinations of relative risks. However, the
+model used in this analysis does not account for age at cessation or
+distinguish between short- and long-term quitters. Therefore, the
+relative risk for ex-smokers was based on estimates corresponding to
+long-term quitters. Furthermore, the model includes 10 sub-states for
+ex-smokers, corresponding to the number of years since quitting. These
+sub-states allow ex-smokers to experience a diminishing probability of
+relapse over time, reflecting evidence that the likelihood of returning
+to smoking decreases with the duration of abstinence.
+
+The transition probabilities among states in the Markov model were
+specific to age and gender. These probabilities were obtained an
+estimation produced from cross-sectional survey by the University of
+Sheffield {[}9{]}. The original probabilities were reported by Index of
+Multiple Deprivation (IMD) quintile. In order to generate an overall
+estimate representative of Birmingham, a weighted average was calculated
+using the population distribution of smokers across IMD deciles within
+the city. Since smoking overall has being following a downward trend in
+recent years and this pattern is expected to persist, it is possible
+that the smoking prevalence could plateau or even increase, similar to
+trend being observed in Australia and US. Therefore, this analysis
+follows the Department of Health \& Social Care (DHSC)'s method {[}10{]}
+to fix the transition probabilities at 2022 estimate through out the
+simulation {(The updated projection used probabilities at 2024
+estimate).} With regards to DHSC's method again, a long-term quit
+probability was applied to ex-smokers who had remained abstinent for 10
+years, allowing them to transition to the non-smoker state. This implies
+that a proportion of ex-smokers will share the same health risk as the
+non-smokers.
+
+In order to follow the DHSC's method as closely as possible, instigation
+rates for 13- to 15-year-olds were calculated using a scaling approach.
+This was carried out by referencing the instigation rates for males and
+females from the US SimSmoke model {[}11{]}, applying the assumption
+that the ratio between adjacent age groups in the US model also applies
+to the Birmingham population.
+
+\subsection{Model structure}\label{model-structure}
+
+This analysis employed an open-cohort Markov model to simulate the
+natural history of smoking behaviour for those who are above 13 years
+old in Birmingham. The model includes annual cycles and a finite time
+horizon of 25 years {(23 years for latest data)}. The model started at
+time 0 using the number of population in 2022 {(2024 for latest data)}.
+Smoking status was classified into non-smokers, current smokers and
+ex-smokers. At the start of each annual cycle, the distribution of
+smoking status among these entrants is determined in proportion to
+observed smoking prevalence data for this age group. Simultaneously, the
+model incorporates net migration by smoking status. For simplicity, it
+is assumed that the smoking distribution of migrants mirrors that of the
+UK population.
+
+\begin{figure}[H]
+
+{\centering \pandocbounded{\includegraphics[keepaspectratio]{images/statetransition.png}}
+
+}
+
+\caption{\textbf{Figure 1.} Markov state transition diagram for smoking
+prevalence}
+
+\end{figure}%
+
+Figure 1 shows that at the beginning of each year t, the population is
+divided into three main states: non-smokers, current smokers, and
+ex-smokers.
+
+\begin{itemize}
+\item
+  \textbf{Non-smokers:} At year \emph{t+1}, the number of non-smokers
+  equals to (1) the number of people who were non-smokers in year
+  \emph{t} and remained non-smokers, plus (2) the number of ex-smokers
+  who reached 10 years since quitting in year \emph{t} and transitioned
+  back to the non-smoker state, minus (3) the number of non-smokers in
+  year \emph{t} who started smoking and moved to the smoker state in
+  year \emph{t+1}, minus (4) the number of non-smokers in year \emph{t}
+  who died, plus (5) the net number of non-smokers migrating into
+  Birmingham (in-migrants minus out-migrants) during year \emph{t}.
+\item
+  \textbf{Current smokers:} At year \emph{t}+1, the number of current
+  smokers equals (1) those who were smokers in year t and continued
+  smoking, plus (2) non-smokers in year t who started smoking in year
+  \emph{t}+1, plus (3) ex-smokers in year \emph{t} who relapsed and
+  returned to smoking, minus (4) smokers in year \emph{t} who quit and
+  moved to the ex-smoker state, minus (5) smokers in year \emph{t} who
+  died, plus (6) the net number of smokers migrating into Birmingham
+  during year \emph{t}.
+\item
+  \textbf{Ex-smokers:} At year \emph{t}+1, the number of ex-smokers
+  equals (1) those who were ex-smokers in year \emph{t} and remained
+  ex-smokers, plus (2) smokers in year \emph{t} who quit during the year
+  and became new ex-smokers, plus (3) every former smoker who quit
+  between year \emph{t--10} and \emph{t} and continues to remain
+  smoke-free (i.e., those progressing through the ``time since quit''
+  categories up to 10 years), minus (4) ex-smokers in any ``time since
+  quit'' category who relapsed and returned to smoking, minus (5)
+  ex-smokers in any ``time since quit'' category who died during year
+  \emph{t}, minus (6) ex-smokers in year \emph{t} who reached 10 years
+  since quitting and transitioned back to the non-smoker state, plus (7)
+  the net number of ex-smokers migrating into the area during year
+  \emph{t}.
+\end{itemize}
+
+At the end of each cycle, every person ages by one year (i.e., age
+\emph{a} becomes \emph{a+1} in year \emph{t+1}), and in each new year
+\emph{t+1}, a new cohort of 13-year-olds enters the model as
+non-smokers. Every person is given a new set of age and gender specific
+transition probabilities when cycle moves forward. For example, a
+17-year-old male in year t will be assigned the transition probabilities
+corresponding to 17-year-old males; when he becomes 18 in the next cycle
+(\emph{t}+1), his probabilities are updated to those specific to
+18-year-old males. This ensures that changes in smoking behaviour
+reflect age- and gender-related differences in initiation, quitting,
+relapse, and mortality rates over time.
+
+\subsection{How scenario works?}\label{how-scenario-works}
+
+To model each policy scenario, assumptions of reduction in instigation
+rate were applied at 10\%, 30\%, 60\% and 90\%. It has to be noted that
+the reduction in instigation is year-by-year, meaning that reduction
+will get compounded over time, implying that the implementation of the
+policy does not provide a one-off change but the effect becomes
+progressively more effective. For example, under a 10\% annual reduction
+scenario, the instigation rate in year \emph{t} would be multiplied by
+0.9. In the following year (\emph{t+1}), the rate would be further
+multiplied by 0.9², and so on, leading to a cumulative reduction effect
+over time.
+
+\section{Results}\label{results}
+
+\subsection{Baseline result}\label{baseline-result}
+
+Applying the baseline transition probabilities to the initial population
+produces the baseline scenario, representing outcomes in the absence of
+any policy intervention. The result is comparable to the DHSC's
+published model, showing a similar trend and similar prevalence. The
+first cycle of the model in 2023 shows the the smoking prevalence for
+those among 14 to 30 year old is 11.35\%. Without any additional
+policies being implemented, the smoking prevalence in Birmingham is
+estimated to reach 11\% in 2047.
+
+{From the latest data, the first cycle of the model in 2025 shows the
+the smoking prevalence for those among 14 to 30 year old is 10.45\%.
+Without any additional policies being implemented, the smoking
+prevalence in Birmingham is estimated to reach 10.15\% in 2047.}
+
+The trend is most likely similar to the published DHSC's model where
+both models reached the long run equilibrium very quickly in the year of
+2028 {(2029 for latest data)} but the change in the rate was
+significantly slower for Birmingham. This difference can largely be
+attributed to demographic and socio-economic factors. Birmingham has a
+younger population structure, both in the 2022 {(2024 for latest data)}
+baseline and in the subnational population projections to 2047 produced
+by the ONS, compared with England overall. A younger age profile implies
+a larger proportion of individuals in age groups with higher instigation
+rates and lower long-term cessation, thereby moderating the overall
+decline.
+
+In addition, the quit and relapse probabilities in this model were
+calculated as a weighted average by deprivation quintile. Given
+Birmingham is one of the most deprived local authorities, the quit rate
+is lower and relapse rate is higher relative to the national average.
+Consequently, less individuals quit and more individuals transition back
+from ex-smoker to current smoker states, resulting in a slower early
+decline in prevalence before reaching equilibrium.
+
+Moreover, this analysis employed an open-cohort markov model, meaning
+that migration was incorporated, whereas the DHSC model was based on a
+closed cohort. This might help explain why the decline in smoking
+prevalence was slower in this analysis compared to the DHSC's model.
+
+\pandocbounded{\includegraphics[keepaspectratio]{smokingprevalence_reading_document_files/figure-pdf/unnamed-chunk-1-1.png}}
+
+The baseline result for adults (18+) is comparable to the model produced
+by Cancer Research UK. The first cycle of the model in 2023 shows the
+the smoking prevalence for adults is 13.06\%. Without any additional
+policies being implemented, the smoking prevalence in Birmingham is
+estimated to reach 6.4\% in 2047. While the trend is most likely similar
+to the one from Cancer Research UK {[}12{]}, their model produced a
+faster declining rate, the same reasons from the above can explain such
+deviation.
+
+{For the latest data, the first cycle of the model in 2025 shows the the
+smoking prevalence for adults is 12.13\%. Without any additional
+policies being implemented, the smoking prevalence in Birmingham is
+estimated to reach 6.07\% in 2047.}
+
+\pandocbounded{\includegraphics[keepaspectratio]{smokingprevalence_reading_document_files/figure-pdf/unnamed-chunk-2-1.png}}
+
+\subsection{Scenario}\label{scenario}
+
+This analysis followed the scenario where the Tobacoo and Vape bill
+{[}13{]} that has passed the second reading in House of Lords will be
+successfully implemented in the proposed date on the 1st of January 2027
+{[}14{]}. The bill aims to prohibit the sale of tobacco to people born
+on or after 1 January 2009 and provision about the licensing of retail
+sales and the registration of retailers, alongside enforcement measures
+and financial penalties for non-compliance. While some public debate has
+characterised the policy as a form of ``nanny state'' intervention, the
+Bill represents one of the most ambitious tobacco control measures in
+recent UK history, aiming to protect future generations from nicotine
+addiction and related harms.
+
+Therefore, this analysis introduces the Tobacco and Vapes Bill within
+the 2027 model cycle, assuming that individuals turning 18 in 2027 will
+be the first cohort affected by the policy. The model applies a
+year-on-year reduction in instigation rates, meaning the effect
+compounds over time as younger cohorts progressively enter the
+population under the new legislation. However, as there is currently no
+empirical evidence quantifying the potential impact of the Bill, the
+effect must be modelled through assumptions. Accordingly, Scenarios 1--4
+represent varying levels of reduction in smoking instigation rates,
+modelled as 10\%, 30\%, 60\%, and 90\% decreases, respectively, relative
+to the baseline scenario of no policy intervention.
+
+The results show that for those among 14 to 30 years old, smoking
+prevalence is projected to decline to 4.13\% by 2047 under Scenario 1
+(10\% reduction in instigation rate), while Scenario 2 (30\% reduction)
+reaches 2.1\% in the same year. Scenarios 3 and 4, representing larger
+reductions of 60\% and 90\%, produced almost identical trends, with
+prevalence stabilising at 1.97\% by 2047.
+
+{The latest results show that for those among 14 to 30 years old,
+smoking prevalence is projected to decline to 3.77\% by 2047 under
+Scenario 1 (10\% reduction in instigation rate), while Scenario 2 (30\%
+reduction) reaches 1.91\% in the same year. Scenarios 3 and 4,
+representing larger reductions of 60\% and 90\%, produced almost
+identical trends, with prevalence stabilising at 1.78\% by 2047.}
+
+\pandocbounded{\includegraphics[keepaspectratio]{smokingprevalence_reading_document_files/figure-pdf/unnamed-chunk-3-1.png}}
+
+\pandocbounded{\includegraphics[keepaspectratio]{smokingprevalence_reading_document_files/figure-pdf/unnamed-chunk-4-1.png}}
+
+The results show that for adults (18+), smoking prevalence is projected
+to decline to 3.98\% by 2047 under Scenario 1 (10\% reduction in
+instigation rate), while Scenario 2 (30\% reduction) reaches 2.97\% in
+the same year. Scenarios 3 and 4, representing larger reductions of 60\%
+and 90\%, produced almost identical trends, with prevalence stabilising
+at approximately 2.7\% by 2047.
+
+{The results for latest data show that for adults (18+), smoking
+prevalence is projected to decline to 3.84\% by 2047 under Scenario 1
+(10\% reduction in instigation rate), while Scenario 2 (30\% reduction)
+reaches 2.93\% in the same year. Scenarios 3 and 4, representing larger
+reductions of 60\% and 90\%, produced almost identical trends, with
+prevalence stabilising at approximately 2.68\% by 2047.}
+
+\pandocbounded{\includegraphics[keepaspectratio]{smokingprevalence_reading_document_files/figure-pdf/unnamed-chunk-5-1.png}}
+
+\pandocbounded{\includegraphics[keepaspectratio]{smokingprevalence_reading_document_files/figure-pdf/unnamed-chunk-6-1.png}}
+
+\section{Limitation}\label{limitation}
+
+In developing the model, several assumptions and simplifications were
+necessary, and as such, the findings should be interpreted in light of
+these limitations.
+
+\textbf{Firstly}, The model does not explicitly incorporate vaping
+behaviour, if vaping became a substitute for smoking in the younger
+cohorts, the model may overstate the decline in nicotine consumption,
+since no information of vaping is incorporated to the model, individuals
+who vape are classified as non-smokers within the current framework.
+\textbf{Secondly}, the model does not incorporate information on how
+long former smokers have been abstinent. All individuals entering the
+ex-smoker state are assumed to have quit for one year at the start of
+each cycle, which may overestimate their likelihood of relapse compared
+to those who have remained smoke-free for longer periods. The model
+applies England's average smoking prevalence to all net migrants, even
+though individuals arriving from other countries may have distinct
+smoking behaviours and cessation histories. Given this limitation, net
+migration may be negative for ex-smoker states, particularly among older
+age groups, reflecting Birmingham's overall pattern of net out-migration
+at older ages. However, because negative values cannot be represented
+within Markov state transitions, the model constrains these values to
+zero. This adjustment ensures model stability but may slightly
+underestimate the outflow of older former smokers in the projected
+population structure. Fortunately, the extent of net out-migration of
+ex-smoker states among older age groups was relatively modest, and
+therefore is unlikely to have a substantial impact on the overall model
+outcomes. \textbf{Thirdly}, parameter uncertainty for transition
+probabilities can not be assessed, as the data sources used did not
+provide associated confidence intervals or measures of variability.
+
+\phantomsection\label{refs}
+\begin{CSLReferences}{0}{0}
+\bibitem[\citeproctext]{ref-ONS_2025_subnational_population_projections}
+\CSLLeftMargin{{[}1{]} }%
+\CSLRightInline{Office for National Statistics.
+\href{https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationprojections/bulletins/subnationalpopulationprojectionsforengland/2022based}{Subnational
+population projections for england: 2022‑based}. Office for National
+Statistics, UK; 2025.}
+
+\bibitem[\citeproctext]{ref-ONS_2023_adult_smoking_habits_gb}
+\CSLLeftMargin{{[}2{]} }%
+\CSLRightInline{Office for National Statistics.
+\href{https://www.ons.gov.uk/peoplepopulationandcommunity/healthandsocialcare/healthandlifeexpectancies/bulletins/adultsmokinghabitsingreatbritain/2022}{Adult
+smoking habits in the UK: 2022}. Office for National Statistics, UK;
+2023.}
+
+\bibitem[\citeproctext]{ref-NHS_Digital_2023_sdd_youth_england}
+\CSLLeftMargin{{[}3{]} }%
+\CSLRightInline{NHS Digital.
+\href{https://digital.nhs.uk/data-and-information/publications/statistical/smoking-drinking-and-drug-use-among-young-people-in-england/2023}{Smoking,
+drinking and drug use among young people in england, 2023}. NHS Digital;
+2023.}
+
+\bibitem[\citeproctext]{ref-ASH_2021_profile_16_17_smokers}
+\CSLLeftMargin{{[}4{]} }%
+\CSLRightInline{Action on Smoking and Health (ASH).
+\href{https://ash.org.uk/uploads/Profile-of-16-and-17-year-old-smokers.pdf}{Profile
+of 16/17‑year‑old smokers}. ASH; 2021.}
+
+\bibitem[\citeproctext]{ref-ONS_2024_adult_smoking_habits_gb}
+\CSLLeftMargin{{[}5{]} }%
+\CSLRightInline{Office for National Statistics.
+\href{https://www.ons.gov.uk/peoplepopulationandcommunity/healthandsocialcare/healthandlifeexpectancies/bulletins/adultsmokinghabitsingreatbritain/2024}{Adult
+smoking habits in the UK: 2024}. Office for National Statistics, UK;
+2025.}
+
+\bibitem[\citeproctext]{ref-ONS_2024_national_life_tables}
+\CSLLeftMargin{{[}6{]} }%
+\CSLRightInline{Office for National Statistics.
+\href{https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/lifeexpectancies/bulletins/nationallifetablesunitedkingdom/2021to2023additionaldata}{National
+life tables, UK: 2021 to 2023 (additional data)}. Office for National
+Statistics; 2024.}
+
+\bibitem[\citeproctext]{ref-Song380}
+\CSLLeftMargin{{[}7{]} }%
+\CSLRightInline{Song F, Elwell-Sutton T, Naughton F, Gentry S. Future
+smoking prevalence by socioeconomic status in england: A computational
+modelling study. Tobacco Control 2021;30:380--5.
+\url{https://doi.org/10.1136/tobaccocontrol-2019-055490}.}
+
+\bibitem[\citeproctext]{ref-JEON2023S53}
+\CSLLeftMargin{{[}8{]} }%
+\CSLRightInline{Jeon J, Inoue-Choi M, Mok Y, McNeel TS, Tam J, Freedman
+ND, et al. Mortality relative risks by smoking, race/ethnicity, and
+education. American Journal of Preventive Medicine 2023;64:S53--62.
+https://doi.org/\url{https://doi.org/10.1016/j.amepre.2022.12.006}.}
+
+\bibitem[\citeproctext]{ref-Gillespie_et_al_smktrans}
+\CSLLeftMargin{{[}9{]} }%
+\CSLRightInline{Gillespie D, Webster L, Leeming G, Opazo-Breton M,
+Brennan A.
+\href{https://stapm.gitlab.io/smoking_state_transitions.html}{Smktrans:
+An r package for estimating smoking state transition probabilities}
+2023.}
+
+\bibitem[\citeproctext]{ref-DHSC_2023_smokefree_generation_modeling}
+\CSLLeftMargin{{[}10{]} }%
+\CSLRightInline{Department of Health and Social Care.
+\href{https://www.gov.uk/government/publications/smokefree-generation-policy-modelling-report/modelling-for-the-smokefree-generation-policy}{Modelling
+for the smokefree generation policy}. UK Government; 2023.}
+
+\bibitem[\citeproctext]{ref-CISNET}
+\CSLLeftMargin{{[}11{]} }%
+\CSLRightInline{Cancer Intervention and Surveillance Modeling Network
+(CISNET).
+\href{https://resources.cisnet.cancer.gov/projects/\#shg/iomr/resources}{Smoking
+history generator (SHG) and individual outcome model resources} 2024.}
+
+\bibitem[\citeproctext]{ref-CRUK_2021_smoking_prevalence_projections}
+\CSLLeftMargin{{[}12{]} }%
+\CSLRightInline{Cancer Research UK.
+\href{https://www.cancerresearchuk.org/sites/default/files/cancer_research_uk_smoking_prevalence_projections_england_0.pdf}{Smoking
+prevalence projections for england}. Cancer Research UK; 2021.}
+
+\bibitem[\citeproctext]{ref-UK_Parliament_2024_Tobacco_Vapes_Bill}
+\CSLLeftMargin{{[}13{]} }%
+\CSLRightInline{UK Parliament.
+\href{https://bills.parliament.uk/bills/3879}{Tobacco and vapes bill}
+2024.}
+
+\bibitem[\citeproctext]{ref-DHSC_2024_tobacco_vapes_policy}
+\CSLLeftMargin{{[}14{]} }%
+\CSLRightInline{Department of Health and Social Care.
+\href{https://www.gov.uk/government/publications/the-tobacco-and-vapes-bill-creating-a-smoke-free-uk-and-tackling-youth-vaping/tobacco-and-vapes-bill-creating-a-smoke-free-uk-and-tackling-youth-vaping}{Tobacco
+and vapes bill: Creating a smoke-free UK and tackling youth vaping}
+2024.}
+
+\end{CSLReferences}
+
+
+
+
+\end{document}
